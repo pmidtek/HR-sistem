@@ -51,8 +51,8 @@ export function Card({ tone = "raised", interactive, padding = "md", className, 
     <div
       className={cn(
         "rounded-m shadow-[inset_0_0_0_1px_var(--border-default)]",
-        tone === "raised" && "bg-raised",
-        tone === "neutral" && "bg-canvas",
+        tone === "raised" && "glass shadow-[inset_0_0_0_1px_var(--border-default),var(--glass-highlight)]",
+        tone === "neutral" && "bg-sunken",
         tone === "brand" && "bg-brand-subtle shadow-[inset_0_0_0_1px_var(--brand)]",
         interactive &&
           "cursor-pointer transition-[transform,box-shadow] duration-[200ms] ease-standard hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]",

@@ -18,7 +18,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-canvas/80 px-4 backdrop-blur-[12px] md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-transparent px-4 backdrop-blur-[12px] md:px-6">
       <IconButton label="Buka menu" className="lg:hidden" onClick={onMenu}>
         <Icon icon={Menu} size={18} />
       </IconButton>
@@ -78,7 +78,7 @@ function NotificationBell() {
         <Popover.Content
           align="end"
           sideOffset={6}
-          className="z-50 w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-s bg-overlay shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-lg)]"
+          className="z-50 w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-s bg-overlay backdrop-blur-xl shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-lg)]"
         >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <p className="font-display text-sm font-medium">Notifikasi</p>

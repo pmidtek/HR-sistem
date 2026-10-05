@@ -57,7 +57,7 @@ export function TaskBoard({ columns, tasks, editable, today, onOpen, onAdd, onMo
                     draggable={editable}
                     onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
                     onClick={() => onOpen(t)}
-                    className="flex flex-col gap-2 rounded-xs bg-raised p-3 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-[transform,box-shadow] duration-[200ms] hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]"
+                    className="flex flex-col gap-2 rounded-xs glass p-3 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-[transform,box-shadow] duration-[200ms] hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]"
                   >
                     <span className={cn("text-sm leading-snug", col.isDone && "text-fg-muted line-through")}>{t.title}</span>
                     <span className="flex flex-wrap gap-1">

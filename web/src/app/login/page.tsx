@@ -47,7 +47,7 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden border-r border-line bg-raised p-12 lg:flex">
+      <section className="relative hidden flex-col justify-between overflow-hidden border-r border-line glass p-12 lg:flex">
         <Logo />
         <div className="flex flex-col gap-6">
           <Eyebrow tone="success">Semua sistem berjalan</Eyebrow>

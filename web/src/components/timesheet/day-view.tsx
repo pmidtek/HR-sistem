@@ -28,7 +28,7 @@ export function DayView({ entries, normalHours, isHoliday, onEdit, onAddAt }: Pr
   const blocks = sorted.map((e, i) => ({ entry: e, len: toMinutes(e.end) - toMinutes(e.start), overtimePart: overtime[i] }));
 
   return (
-    <div className="relative rounded-s bg-raised shadow-[inset_0_0_0_1px_var(--border-default)]">
+    <div className="relative rounded-s glass shadow-[inset_0_0_0_1px_var(--border-default)]">
       <div className="relative" style={{ height: hours.length * HOUR_PX }}>
         {hours.map((h, i) => (
           <button

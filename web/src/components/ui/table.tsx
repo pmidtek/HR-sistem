@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 export function Table({ className, ...rest }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-s shadow-[inset_0_0_0_1px_var(--border-default)]">
+    <div className="glass overflow-x-auto rounded-s shadow-[inset_0_0_0_1px_var(--border-default),var(--glass-highlight)]">
       <table className={cn("w-full border-collapse text-sm", className)} {...rest} />
     </div>
   );

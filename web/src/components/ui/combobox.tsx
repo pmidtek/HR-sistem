@@ -58,7 +58,7 @@ export function Combobox({
           <Popover.Content
             align="start"
             sideOffset={4}
-            className="z-50 w-[var(--radix-popover-trigger-width)] min-w-64 overflow-hidden rounded-xs bg-overlay shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)]"
+            className="z-50 w-[var(--radix-popover-trigger-width)] min-w-64 overflow-hidden rounded-xs bg-overlay backdrop-blur-xl shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)]"
           >
             <Command>
               <div className="flex items-center gap-2 border-b border-line px-3">

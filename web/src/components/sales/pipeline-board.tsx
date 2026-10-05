@@ -56,7 +56,7 @@ export function PipelineBoard({ items, companyName, editable, onOpen, onMove }: 
                   draggable={editable}
                   onDragStart={(e) => e.dataTransfer.setData("text/plain", o.id)}
                   onClick={() => onOpen(o)}
-                  className="flex flex-col gap-2 rounded-xs bg-raised p-3 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-[transform,box-shadow] duration-[200ms] hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]"
+                  className="flex flex-col gap-2 rounded-xs glass p-3 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-[transform,box-shadow] duration-[200ms] hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]"
                 >
                   <span className="font-mono text-[10px] text-fg-brand">{o.code}</span>
                   <span className="text-sm leading-snug text-fg">{o.name}</span>

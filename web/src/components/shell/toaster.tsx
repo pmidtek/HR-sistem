@@ -16,7 +16,7 @@ export function Toaster() {
         <div
           key={t.id}
           role="status"
-          className="pointer-events-auto flex items-start gap-3 rounded-s bg-overlay px-4 py-3 shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)]"
+          className="pointer-events-auto flex items-start gap-3 rounded-s bg-overlay backdrop-blur-xl px-4 py-3 shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)]"
         >
           <Icon icon={toneIcon[t.tone]} size={18} className={cn("mt-px", toneColor[t.tone])} />
           <p className="flex-1 text-sm text-fg">{t.title}</p>

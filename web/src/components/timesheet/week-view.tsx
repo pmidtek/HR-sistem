@@ -33,7 +33,7 @@ export function WeekView({ days, entries, leaveDates, today, onAdd, onEdit }: Pr
           <div
             key={d.date}
             className={cn(
-              "flex min-h-56 flex-col rounded-s bg-raised shadow-[inset_0_0_0_1px_var(--border-default)]",
+              "flex min-h-56 flex-col rounded-s glass shadow-[inset_0_0_0_1px_var(--border-default)]",
               isToday && "shadow-[inset_0_0_0_1px_var(--brand)]",
               (d.isHoliday || onLeave) && "bg-sunken",
             )}
@@ -58,7 +58,7 @@ export function WeekView({ days, entries, leaveDates, today, onAdd, onEdit }: Pr
                   key={e.id}
                   type="button"
                   onClick={() => onEdit(e)}
-                  className="flex flex-col gap-0.5 rounded-xs bg-canvas px-2 py-1.5 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-colors hover:shadow-[inset_0_0_0_1px_var(--border-strong)]"
+                  className="flex flex-col gap-0.5 rounded-xs bg-hover px-2 py-1.5 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-colors hover:shadow-[inset_0_0_0_1px_var(--border-strong)]"
                 >
                   <span className="flex items-center justify-between gap-1 font-mono text-[10px] text-fg-subtle">
                     {e.start}–{e.end}

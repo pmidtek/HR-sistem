@@ -9,6 +9,7 @@
   --color-raised: var(--surface-raised);
   --color-overlay: var(--surface-overlay);
   --color-sunken: var(--surface-sunken);
+  --color-solid: var(--surface-solid);
   --color-hover: var(--surface-hover);
 
   --color-fg: var(--text-primary);
@@ -64,7 +65,8 @@ html.light {
 }
 
 body {
-  background: var(--surface-canvas);
+  background: var(--canvas-glow), var(--surface-canvas);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -74,6 +76,13 @@ body {
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* Efek kaca untuk kartu, panel, sidebar, dialog. */
+@utility glass {
+  background-color: var(--surface-raised);
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(140%);
 }
 
 ::selection {

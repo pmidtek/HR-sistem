@@ -31,13 +31,13 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line bg-raised lg:block">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line glass lg:block">
         <Sidebar />
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button type="button" aria-label="Tutup menu" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="relative h-full w-64 border-r border-line bg-raised">
+          <aside className="relative h-full w-64 border-r border-line bg-overlay backdrop-blur-xl">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>

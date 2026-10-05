@@ -67,7 +67,7 @@ export default function TimesheetRecapPage() {
             const under = !project && !activity && normal < targetSoFar;
             return (
               <Tr key={u.id}>
-                <Td className="sticky left-0 z-10 bg-raised">
+                <Td className="sticky left-0 z-10 bg-solid">
                   <p className="text-sm">{u.name}</p>
                   <p className="text-xs text-fg-subtle">{teamName(u.teamId)}</p>
                 </Td>

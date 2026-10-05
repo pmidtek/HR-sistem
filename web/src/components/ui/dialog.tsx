@@ -25,7 +25,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <RadixDialog.Content
           className={cn(
             "fixed top-1/2 left-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col",
-            "rounded-l bg-overlay shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-lg)]",
+            "rounded-l bg-overlay backdrop-blur-2xl shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-lg)]",
             width === "md" ? "max-w-lg" : "max-w-3xl",
           )}
         >
