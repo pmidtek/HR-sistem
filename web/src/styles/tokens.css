@@ -1,0 +1,170 @@
+/*
+ * Cartogram Design System tokens (dibangun ulang dari DESIGN-SYSTEM.md).
+ * Default theme: Geodashboard (dark) di :root. Light: class "light" di <html>.
+ * Pakai semantic token; raw ramp hanya untuk momen brand.
+ */
+
+:root {
+  /* Raw ramps */
+  --color-brand-brand-50: #fef3ec;
+  --color-brand-brand-100: #fde2d1;
+  --color-brand-brand-200: #fbc4a3;
+  --color-brand-brand-300: #f8a06e;
+  --color-brand-brand-400: #f6843f;
+  --color-brand-brand-500: #f36a1d;
+  --color-brand-brand-600: #d95510;
+  --color-brand-brand-700: #b3440d;
+  --color-brand-brand-800: #8c3610;
+  --color-brand-brand-900: #6e2d10;
+
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f9f8f7;
+  --color-neutral-100: #f1efed;
+  --color-neutral-200: #e4e1de;
+  --color-neutral-300: #cfcbc7;
+  --color-neutral-400: #a8a39e;
+  --color-neutral-500: #85807b;
+  --color-neutral-600: #66615d;
+  --color-neutral-700: #4a4643;
+  --color-neutral-800: #2e2b29;
+  --color-neutral-850: #252220;
+  --color-neutral-900: #1d1b1a;
+  --color-neutral-950: #161414;
+
+  --color-success-500: #20d372;
+  --color-danger-500: #e35131;
+  --color-warning-500: #e8a33a;
+
+  /* Typography */
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 28px;
+  --text-3xl: 32px;
+  --text-4xl: 36px;
+  --text-5xl: 48px;
+  --text-6xl: 64px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.4;
+  --leading-relaxed: 1.6;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-caps: 0.08em;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radius */
+  --r-xxs: 4px;
+  --r-xs: 8px;
+  --r-s: 12px;
+  --r-m: 16px;
+  --r-l: 20px;
+  --r-xl: 24px;
+  --r-2xl: 32px;
+  --r-pill: 99px;
+  --r-circle: 9999px;
+
+  /* Border */
+  --border-width: 1px;
+  --border-width-thick: 1.5px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  --focus-ring: 0 0 0 3px var(--color-brand-brand-200);
+
+  /* Semantic — Geodashboard (dark) */
+  --surface-canvas: var(--color-neutral-950);
+  --surface-raised: var(--color-neutral-900);
+  --surface-overlay: var(--color-neutral-850);
+  --surface-sunken: #121010;
+  --surface-hover: rgba(249, 248, 247, 0.05);
+
+  --text-primary: var(--color-neutral-50);
+  --text-secondary: var(--color-neutral-400);
+  --text-tertiary: var(--color-neutral-500);
+  --text-brand: var(--color-brand-brand-400);
+  --text-danger: #ef7a5f;
+  --text-success: var(--color-success-500);
+  --text-on-brand: var(--color-neutral-0);
+
+  --border-default: rgba(249, 248, 247, 0.08);
+  --border-strong: rgba(249, 248, 247, 0.16);
+
+  --brand: var(--color-brand-brand-500);
+  --brand-hover: var(--color-brand-brand-600);
+  --brand-press: var(--color-brand-brand-700);
+  --brand-subtle: rgba(243, 106, 29, 0.14);
+
+  --success: var(--color-success-500);
+  --success-subtle: rgba(32, 211, 114, 0.12);
+  --danger: var(--color-danger-500);
+  --danger-subtle: rgba(227, 81, 49, 0.14);
+  --warning: var(--color-warning-500);
+  --warning-subtle: rgba(232, 163, 58, 0.14);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.44);
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.light,
+[data-theme="light"] {
+  --surface-canvas: var(--color-neutral-50);
+  --surface-raised: var(--color-neutral-0);
+  --surface-overlay: var(--color-neutral-0);
+  --surface-sunken: var(--color-neutral-100);
+  --surface-hover: rgba(22, 20, 20, 0.04);
+
+  --text-primary: var(--color-neutral-950);
+  --text-secondary: var(--color-neutral-600);
+  --text-tertiary: var(--color-neutral-500);
+  --text-brand: var(--color-brand-brand-600);
+  --text-danger: #c53d20;
+  --text-success: #13a057;
+
+  --border-default: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+
+  --brand-subtle: var(--color-brand-brand-50);
+  --success-subtle: #e4f9ee;
+  --danger-subtle: #fceae5;
+  --warning-subtle: #fdf3e2;
+
+  --shadow-xs: 0 1px 2px rgba(22, 20, 20, 0.05);
+  --shadow-sm: 0 2px 6px rgba(22, 20, 20, 0.06);
+  --shadow-md: 0 8px 20px rgba(22, 20, 20, 0.08);
+  --shadow-lg: 0 16px 40px rgba(22, 20, 20, 0.1);
+  --shadow-panel: 0 4px 16px rgba(22, 20, 20, 0.08);
+}
