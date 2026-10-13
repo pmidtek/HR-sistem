@@ -7,7 +7,7 @@ import { Input, Textarea } from "../ui/form";
 import { SuccessCheck } from "../ui/success-check";
 
 /** Lama centang sukses tampil sebelum dialog tertutup. */
-const SUCCESS_HOLD_MS = 520;
+const SUCCESS_HOLD_MS = 850;
 
 export type Decision = {
   title: string;
@@ -60,7 +60,7 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
     >
       {done ? (
         <div className="flex flex-col items-center gap-3 py-6" role="status">
-          <SuccessCheck size={56} />
+          <SuccessCheck size={72} />
           <p className="text-sm text-fg">Tersimpan</p>
         </div>
       ) : (

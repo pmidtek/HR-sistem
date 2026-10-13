@@ -20,10 +20,10 @@ export function Toaster() {
             key={t.id}
             layout
             role="status"
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, x: 48, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 16, transition: { duration: DURATION.base, ease: EASE_STANDARD } }}
-            transition={{ duration: DURATION.slow, ease: EASE_STANDARD }}
+            transition={{ type: "spring", stiffness: 320, damping: 26 }}
             className="pointer-events-auto flex items-start gap-3 rounded-s bg-overlay backdrop-blur-xl px-4 py-3 shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)]"
           >
             <motion.span

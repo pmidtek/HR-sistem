@@ -15,7 +15,8 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 
 /**
  * Helper animasi bersama. Aturan:
- * - Durasi pendek (150–400ms), easing = --ease-standard dari tokens.css.
+ * - Elemen masuk pakai pegas / --ease-out; count-up 1,2 dtk & bar 0,9 dtk supaya terasa.
+ *   Interaksi kecil (hover, tekan, toast keluar) tetap cepat dengan --ease-standard.
  * - Hanya transform & opacity.
  * - prefers-reduced-motion aktif → tanpa animasi (langsung ke keadaan akhir), diatur
  *   terpusat oleh MotionProvider. Jangan ubah `initial` berdasarkan preferensi ini.
@@ -23,6 +24,10 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 
 /** Sama dengan --ease-standard: cubic-bezier(0.2, 0, 0, 1). */
 export const EASE_STANDARD = [0.2, 0, 0, 1] as const;
+/** Sama dengan --ease-out: cubic-bezier(0.16, 1, 0.3, 1), untuk elemen yang masuk. */
+export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+/** Pegas untuk item yang muncul: sedikit "hidup" tanpa memantul berlebihan. */
+export const ENTER_SPRING: Transition = { type: "spring", stiffness: 260, damping: 24, mass: 0.9 };
 export const DURATION = { fast: 0.15, base: 0.2, slow: 0.32, max: 0.4 } as const;
 export const baseTransition: Transition = { duration: DURATION.slow, ease: EASE_STANDARD };
 
@@ -50,7 +55,7 @@ export function usePrefersReducedMotion(): boolean {
 type FadeInProps = { children: ReactNode; className?: string; delay?: number; y?: number };
 
 /** Muncul dengan fade + geser naik tipis. */
-export function FadeIn({ children, className, delay = 0, y = 8 }: FadeInProps) {
+export function FadeIn({ children, className, delay = 0, y = 16 }: FadeInProps) {
   return (
     <motion.div
       className={className}
@@ -64,12 +69,12 @@ export function FadeIn({ children, className, delay = 0, y = 8 }: FadeInProps) {
 }
 
 function containerVariants(delay: number): Variants {
-  return { hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: delay } } };
+  return { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: delay } } };
 }
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: { duration: DURATION.slow, ease: EASE_STANDARD } },
+  hidden: { opacity: 0, y: 24, scale: 0.96 },
+  show: { opacity: 1, y: 0, scale: 1, transition: ENTER_SPRING },
 };
 
 const containers = { div: motion.div, section: motion.section, tbody: motion.tbody, ul: motion.ul };
@@ -120,20 +125,20 @@ export function GrowBar({ ratio, className }: { ratio: number; className?: strin
       style={{ originX: 0, display: "block" }}
       initial={{ scaleX: 0 }}
       animate={{ scaleX: scale }}
-      transition={{ duration: DURATION.max, ease: EASE_STANDARD }}
+      transition={{ duration: 0.9, delay: 0.15, ease: EASE_OUT }}
     />
   );
 }
 
-/** Transisi antar halaman: fade + geser 8px. Hanya animasi masuk (exit di App Router tidak stabil). */
+/** Transisi antar halaman: fade + geser 20px. Hanya animasi masuk (exit di App Router tidak stabil). */
 export function PageTransition({ id, children, className }: { id: string; children: ReactNode; className?: string }) {
   return (
     <motion.div
       key={id}
       className={className}
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: EASE_STANDARD }}
+      transition={{ duration: 0.45, ease: EASE_OUT }}
     >
       {children}
     </motion.div>
@@ -189,7 +194,7 @@ export function CountUp({ value, format = (n) => String(n), className }: CountUp
       return;
     }
     mv.set(0);
-    const controls = animate(mv, value, { duration: DURATION.max, ease: EASE_STANDARD });
+    const controls = animate(mv, value, { duration: 1.2, ease: EASE_OUT });
     controls.then(() => {
       done.current = true;
     });

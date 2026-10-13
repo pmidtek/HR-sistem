@@ -55,7 +55,7 @@ export function Card({ tone = "raised", interactive, padding = "md", className, 
         tone === "neutral" && "bg-sunken",
         tone === "brand" && "bg-brand-subtle shadow-[inset_0_0_0_1px_var(--brand)]",
         interactive &&
-          "cursor-pointer transition-[transform,box-shadow] duration-[200ms] ease-standard hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)]",
+          "cursor-pointer transition-[transform,box-shadow] duration-[200ms] ease-standard hover:-translate-y-1 hover:shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-md)] active:translate-y-0 active:scale-[0.99]",
         pad[padding],
         className,
       )}

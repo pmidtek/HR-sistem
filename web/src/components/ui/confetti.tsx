@@ -21,7 +21,7 @@ function makePieces(count: number): Piece[] {
   burstSeq += 1;
   return Array.from({ length: count }, (_, i) => {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6;
-    const dist = 90 + Math.random() * 90;
+    const dist = 140 + Math.random() * 160;
     return {
       id: burstSeq * 1000 + i,
       x: Math.cos(angle) * dist,
@@ -29,8 +29,8 @@ function makePieces(count: number): Piece[] {
       y: Math.sin(angle) * dist * 0.7 - 40,
       rotate: (Math.random() - 0.5) * 540,
       color: COLORS[i % COLORS.length],
-      w: 6 + Math.random() * 4,
-      h: 3 + Math.random() * 3,
+      w: 7 + Math.random() * 5,
+      h: 4 + Math.random() * 3,
       delay: Math.random() * 0.06,
     };
   });
@@ -40,14 +40,14 @@ function makePieces(count: number): Piece[] {
  * Confetti kecil buatan sendiri (tanpa library). Pakai: const { fire, node } = useConfetti();
  * panggil fire() lalu render {node}. Tidak muncul jika prefers-reduced-motion aktif.
  */
-export function useConfetti(count = 24): { fire: () => void; node: ReactNode } {
+export function useConfetti(count = 40): { fire: () => void; node: ReactNode } {
   const reduce = usePrefersReducedMotion();
   const [pieces, setPieces] = useState<Piece[]>([]);
 
   const fire = useCallback(() => {
     if (reduce) return;
     setPieces(makePieces(count));
-    window.setTimeout(() => setPieces([]), 1100);
+    window.setTimeout(() => setPieces([]), 1400);
   }, [count, reduce]);
 
   const node =
@@ -60,7 +60,7 @@ export function useConfetti(count = 24): { fire: () => void; node: ReactNode } {
             style={{ width: p.w, height: p.h, background: p.color }}
             initial={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 0.6 }}
             animate={{ x: [0, p.x, p.x * 1.08], y: [0, p.y, p.y + 120], rotate: p.rotate, opacity: [1, 1, 0], scale: 1 }}
-            transition={{ duration: 0.9, delay: p.delay, ease: [0.16, 1, 0.3, 1], times: [0, 0.45, 1] }}
+            transition={{ duration: 1.2, delay: p.delay, ease: [0.16, 1, 0.3, 1], times: [0, 0.45, 1] }}
           />
         ))}
       </div>

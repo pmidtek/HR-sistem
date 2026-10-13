@@ -14,9 +14,9 @@ export function SuccessCheck({ size = 48, className }: { size?: number; classNam
       aria-label="Berhasil"
       className={cn("inline-flex items-center justify-center rounded-full bg-success-subtle text-fg-success", className)}
       style={{ width: size, height: size }}
-      initial={{ scale: 0.6, opacity: 0 }}
+      initial={{ scale: 0.3, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 520, damping: 22, mass: 0.6 }}
+      transition={{ type: "spring", stiffness: 420, damping: 14, mass: 0.7 }}
     >
       <motion.span
         initial={{ scale: 0.4, opacity: 0 }}

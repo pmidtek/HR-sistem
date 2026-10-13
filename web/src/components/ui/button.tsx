@@ -40,7 +40,7 @@ export function buttonClass({
 }: Pick<ButtonProps, "variant" | "tone" | "size" | "fullWidth">): string {
   return cn(
     "inline-flex items-center justify-center gap-2 rounded-xxs font-medium whitespace-nowrap",
-    "transition-colors duration-[120ms] ease-standard select-none",
+    "transition-[color,background-color,box-shadow,opacity,transform] duration-[120ms] ease-standard select-none active:scale-[0.97]",
     "disabled:pointer-events-none disabled:opacity-40",
     size === "small" ? "h-8 px-3 text-xs" : "h-10 px-4 text-sm",
     fullWidth && "w-full",
