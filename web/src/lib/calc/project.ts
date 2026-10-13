@@ -1,4 +1,5 @@
 /** Logic murni Project Workspace: progress, keterlambatan, agenda, beban tim, dependensi, penomoran. */
+import type { ChangeRequest, ChangeStatus } from "../project-types";
 import type { BoardColumn, Task } from "../types";
 import { addDays, diffDays } from "./dates";
 
@@ -144,4 +145,24 @@ export function milestoneState(m: { targetDate: string; completedAt: string | nu
 /** Deliverable terlambat: lewat deadline dan belum terkirim. */
 export function isDeliverableLate(d: { deadline: string | null; status: string }, today: string): boolean {
   return d.status !== "sent" && d.deadline !== null && d.deadline < today;
+}
+
+
+/** Alur status CR: Diajukan → Direview → Disetujui / Ditolak → Diimplementasikan. */
+export const crTransitions: Record<ChangeStatus, ChangeStatus[]> = {
+  submitted: ["under_review", "approved", "rejected"],
+  under_review: ["approved", "rejected"],
+  approved: ["implemented"],
+  rejected: [],
+  implemented: [],
+};
+
+export function canTransitionCr(from: ChangeStatus, to: ChangeStatus): boolean {
+  return crTransitions[from].includes(to);
+}
+
+/** Ringkasan CR: total, disetujui (termasuk diimplementasikan), tambahan hari dari CR disetujui. */
+export function crSummary(list: Pick<ChangeRequest, "status" | "impactDays">[]): { total: number; approved: number; extraDays: number } {
+  const ok = list.filter((c) => c.status === "approved" || c.status === "implemented");
+  return { total: list.length, approved: ok.length, extraDays: ok.reduce((s, c) => s + c.impactDays, 0) };
 }

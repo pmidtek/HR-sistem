@@ -3,6 +3,8 @@ import type { Baseline, ChangeRequest, Sprint } from "../project-types";
 import type { BoardColumn, Task } from "../types";
 import {
   agenda,
+  canTransitionCr,
+  crSummary,
   attentionTasks,
   createsCycle,
   doneColumnIds,
@@ -218,5 +220,19 @@ describe("status milestone & deliverable", () => {
     expect(isDeliverableLate({ deadline: "2026-10-01", status: "review" }, TODAY)).toBe(true);
     expect(isDeliverableLate({ deadline: "2026-10-01", status: "sent" }, TODAY)).toBe(false);
     expect(isDeliverableLate({ deadline: null, status: "draft" }, TODAY)).toBe(false);
+  });
+});
+
+describe("alur & ringkasan change request", () => {
+  it("transisi yang diizinkan", () => {
+    expect(canTransitionCr("submitted", "under_review")).toBe(true);
+    expect(canTransitionCr("under_review", "approved")).toBe(true);
+    expect(canTransitionCr("approved", "implemented")).toBe(true);
+    expect(canTransitionCr("rejected", "approved")).toBe(false);
+    expect(canTransitionCr("submitted", "implemented")).toBe(false);
+  });
+  it("ringkasan hanya menghitung CR disetujui/diimplementasikan untuk tambahan hari", () => {
+    expect(crSummary([{ status: "approved", impactDays: 3 }, { status: "implemented", impactDays: 5 }, { status: "under_review", impactDays: 15 }]))
+      .toEqual({ total: 3, approved: 2, extraDays: 8 });
   });
 });

@@ -4,6 +4,8 @@ import { saveDeliverable, saveMilestone, setDeliverableStatus, toggleMilestoneDo
 import { completeSprint, deleteSprint, setSprintTasks, startSprint } from "./actions-sprints";
 import { actionItemToTask, publishMom, saveMom } from "./actions-mom";
 import { saveDecision, saveLink } from "./actions-files";
+import { saveCr, transitionCr } from "./actions-changes";
+import { setContactRole } from "./actions-client";
 import { addComment, createTask, moveTask, updateTask } from "./actions-tasks";
 import { initialState } from "./state";
 
@@ -144,5 +146,34 @@ describe("aksi MOM & files", () => {
 
   it("tautan wajib URL http(s)", () => {
     expect(() => saveLink(initialState, "p3", { label: "Doc", url: "docs.example.com", category: "Dokumen" }, lead, AT)).toThrow(/http/);
+  });
+});
+
+describe("aksi change request & client", () => {
+  const input = { title: "Ekspor PDF", description: "Klien minta PDF", source: "client" as const, requestedBy: "Wulan", requestedAt: "2026-10-07", impactDays: 4, impactNote: "", estimateHours: 10 };
+
+  it("member boleh mengajukan CR (nomor berikut), tapi tidak boleh memutuskan", () => {
+    const member = { id: "u8", role: "employee" as const };
+    const s = saveCr(initialState, "p3", input, member, AT);
+    const cr = s.changeRequests.find((c) => c.title === "Ekspor PDF");
+    expect(cr?.number).toBe(4);
+    expect(() => cr && transitionCr(s, cr.id, "approved", member, AT)).toThrow();
+  });
+
+  it("disetujui: buat task tertaut & geser target project", () => {
+    const s0 = saveCr(initialState, "p3", input, lead, AT);
+    const id = s0.changeRequests.find((c) => c.title === "Ekspor PDF")?.id ?? "";
+    const s = transitionCr(s0, id, "approved", lead, AT, { createTaskBoardId: "p3-b1", shiftTarget: true, taskId: "t-cr" });
+    expect(s.tasks.find((t) => t.id === "t-cr")?.title).toBe("[CR-004] Ekspor PDF");
+    expect(s.changeRequests.find((c) => c.id === id)?.linkedTaskIds).toEqual(["t-cr"]);
+    expect(s.projects.find((p) => p.id === "p3")?.targetDate).toBe("2026-10-19");
+    expect(() => transitionCr(s, id, "rejected", lead, AT)).toThrow();
+  });
+
+  it("peran stakeholder klien bisa diset dan dihapus", () => {
+    const s = setContactRole(initialState, "p3", "ct6", "technical", lead, AT);
+    expect(s.projects.find((p) => p.id === "p3")?.clientContactRoles.ct6).toBe("technical");
+    const cleared = setContactRole(s, "p3", "ct6", null, lead, AT);
+    expect(cleared.projects.find((p) => p.id === "p3")?.clientContactRoles.ct6).toBeUndefined();
   });
 });
