@@ -22,9 +22,11 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** Entri yang diedit, atau draf baru (tanpa id). */
   initial: EntryInput;
+  /** Dipanggil setelah entri berhasil disimpan (untuk feedback visual). */
+  onSaved?: (id: string) => void;
 };
 
-export function EntryDialog({ open, onOpenChange, initial }: Props) {
+export function EntryDialog({ open, onOpenChange, initial, onSaved }: Props) {
   const { state, user, today, run } = useAuthed();
   const { projectOptions } = useLookups();
   const [form, setForm] = useState<EntryInput>(initial);
@@ -44,7 +46,10 @@ export function EntryDialog({ open, onOpenChange, initial }: Props) {
     setErrors(errs);
     if (errs.length > 0) return;
     const entry: TimesheetEntry = { ...form, id: form.id ?? newId("ts"), userId: user.id, locked: false };
-    if (run((s) => saveTimesheetEntry(s, entry), form.id ? "Entri diperbarui." : "Entri ditambahkan.")) onOpenChange(false);
+    if (run((s) => saveTimesheetEntry(s, entry), form.id ? "Entri diperbarui." : "Entri ditambahkan.")) {
+      onSaved?.(entry.id);
+      onOpenChange(false);
+    }
   }
 
   function remove() {

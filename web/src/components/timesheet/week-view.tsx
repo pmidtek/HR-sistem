@@ -8,17 +8,19 @@ import type { TimesheetEntry } from "@/lib/types";
 import { useLookups, type DaySummary } from "../hooks";
 import { Badge } from "../ui/display";
 import { Icon } from "../ui/icon";
+import { SavedFlash, type SavedMark } from "./saved-flash";
 
 type Props = {
   days: DaySummary[];
   entries: TimesheetEntry[];
   leaveDates: Set<string>;
   today: string;
+  saved: SavedMark | null;
   onAdd: (date: string) => void;
   onEdit: (entry: TimesheetEntry) => void;
 };
 
-export function WeekView({ days, entries, leaveDates, today, onAdd, onEdit }: Props) {
+export function WeekView({ days, entries, leaveDates, today, saved, onAdd, onEdit }: Props) {
   const { activityName, holidayName } = useLookups();
 
   return (
@@ -55,10 +57,10 @@ export function WeekView({ days, entries, leaveDates, today, onAdd, onEdit }: Pr
               {hName && <Badge tone="danger">{hName}</Badge>}
               {list.map((e) => (
                 <button
-                  key={e.id}
+                  key={saved?.id === e.id ? `${e.id}:${saved.at}` : e.id}
                   type="button"
                   onClick={() => onEdit(e)}
-                  className="flex flex-col gap-0.5 rounded-xs bg-hover px-2 py-1.5 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-colors hover:shadow-[inset_0_0_0_1px_var(--border-strong)]"
+                  className="relative flex flex-col gap-0.5 rounded-xs bg-hover px-2 py-1.5 text-left shadow-[inset_0_0_0_1px_var(--border-default)] transition-colors hover:shadow-[inset_0_0_0_1px_var(--border-strong)]"
                 >
                   <span className="flex items-center justify-between gap-1 font-mono text-[10px] text-fg-subtle">
                     {e.start}–{e.end}
@@ -67,6 +69,7 @@ export function WeekView({ days, entries, leaveDates, today, onAdd, onEdit }: Pr
                   <span className="truncate font-mono text-[11px] text-fg-brand">{e.projectCode}</span>
                   <span className="line-clamp-2 text-xs text-fg">{e.description}</span>
                   <span className="text-[10px] text-fg-subtle">{activityName(e.activityId)}</span>
+                  {saved?.id === e.id && <SavedFlash />}
                 </button>
               ))}
               {!future && !onLeave && (

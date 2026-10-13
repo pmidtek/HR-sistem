@@ -20,6 +20,7 @@ import { Card, EmptyState, Stat } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Tabs } from "@/components/ui/tabs";
+import { useConfetti } from "@/components/ui/confetti";
 
 const NEXT_PERIOD = "2026-10";
 
@@ -42,7 +43,14 @@ export default function PayrollPage() {
   const editable = isFinance && (current?.status === "draft" || current?.status === "returned");
   const hasNext = state.payrollRuns.some((r) => r.period === NEXT_PERIOD);
 
-  const act = (a: PayrollAction, msg: string, note?: string) => current && run((s) => actOnPayroll(s, current.id, a, actor, today, note), msg);
+  const confetti = useConfetti();
+  const act = (a: PayrollAction, msg: string, note?: string) => {
+    if (!current) return false;
+    const ok = run((s) => actOnPayroll(s, current.id, a, actor, today, note), msg);
+    // Payroll disetujui / selesai ditransfer: confetti kecil sekali.
+    if (ok && (a === "approve" || a === "transfer")) confetti.fire();
+    return ok;
+  };
 
   function generate() {
     if (run((s) => generatePayroll(s, current && editable ? current.period : NEXT_PERIOD, actor), "Draf payroll dibuat.")) {
@@ -94,7 +102,7 @@ export default function PayrollPage() {
                 {isFinance && current.status === "approved" && <Button size="small" onClick={() => act("transfer", "Ditandai sudah ditransfer.")}>Tandai Sudah Ditransfer</Button>}
                 {actor.role === "stakeholder" && current.status === "pending" && (
                   <>
-                    <Button size="small" variant="secondary" tone="danger" onClick={() => setDecision({ title: "Kembalikan payroll", confirmLabel: "Kembalikan", tone: "danger", noteRequired: true, onConfirm: (note) => Boolean(act("return", "Payroll dikembalikan ke Finance.", note)) })}>
+                    <Button size="small" variant="secondary" tone="danger" onClick={() => setDecision({ title: "Kembalikan payroll", confirmLabel: "Kembalikan", tone: "danger", noteRequired: true, onConfirm: (note) => act("return", "Payroll dikembalikan ke Finance.", note) })}>
                       Kembalikan dengan catatan
                     </Button>
                     <Button size="small" onClick={() => act("approve", "Payroll disetujui. Slip gaji terbit.")}>Setujui</Button>
@@ -124,6 +132,7 @@ export default function PayrollPage() {
       )}
       {editing && <ManualDialog key={editing.id} slip={editing} onClose={() => setEditing(null)} />}
       {decision && <DecisionDialog decision={decision} onClose={() => setDecision(null)} />}
+      {confetti.node}
     </>
   );
 }

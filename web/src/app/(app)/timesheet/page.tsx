@@ -12,6 +12,7 @@ import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { DayView } from "@/components/timesheet/day-view";
 import { EntryDialog } from "@/components/timesheet/entry-dialog";
 import { WeekView } from "@/components/timesheet/week-view";
+import type { SavedMark } from "@/components/timesheet/saved-flash";
 import { Button, IconButton } from "@/components/ui/button";
 import { Card, Stat } from "@/components/ui/display";
 import { Icon } from "@/components/ui/icon";
@@ -25,6 +26,7 @@ export default function TimesheetPage() {
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(today);
   const [dialog, setDialog] = useState<{ key: number; initial: EntryInput } | null>(null);
+  const [saved, setSaved] = useState<SavedMark | null>(null);
 
   const mine = useMemo(() => state.timesheet.filter((e) => e.userId === user.id), [state.timesheet, user.id]);
   const leaveDates = useMemo(() => approvedLeaveDates(state, user.id), [state, user.id]);
@@ -84,9 +86,10 @@ export default function TimesheetPage() {
       </div>
 
       {view === "week" ? (
-        <WeekView days={week} entries={mine} leaveDates={leaveDates} today={today} onAdd={openNew} onEdit={openEdit} />
+        <WeekView days={week} entries={mine} leaveDates={leaveDates} today={today} saved={saved} onAdd={openNew} onEdit={openEdit} />
       ) : (
         <DayView
+          saved={saved}
           entries={mine.filter((e) => e.date === anchor)}
           normalHours={state.settings.work.normalHoursPerDay}
           isHoliday={isHoliday(anchor)}
@@ -121,7 +124,7 @@ export default function TimesheetPage() {
         </Card>
       </div>
 
-      {dialog && <EntryDialog key={dialog.key} open onOpenChange={(o) => !o && setDialog(null)} initial={dialog.initial} />}
+      {dialog && <EntryDialog key={dialog.key} open onOpenChange={(o) => !o && setDialog(null)} initial={dialog.initial} onSaved={(id) => setSaved({ id, at: Date.now() })} />}
     </>
   );
 }

@@ -5,6 +5,7 @@ import { overtimePerEntry } from "@/lib/calc/overtime";
 import { formatDuration } from "@/lib/format";
 import type { TimesheetEntry } from "@/lib/types";
 import { useLookups } from "../hooks";
+import { SavedFlash, type SavedMark } from "./saved-flash";
 
 const START_HOUR = 6;
 const END_HOUR = 23;
@@ -14,12 +15,13 @@ type Props = {
   entries: TimesheetEntry[];
   normalHours: number;
   isHoliday: boolean;
+  saved: SavedMark | null;
   onEdit: (entry: TimesheetEntry) => void;
   onAddAt: (start: string) => void;
 };
 
 /** Timeline harian: terlihat jam yang kosong dan yang terisi. */
-export function DayView({ entries, normalHours, isHoliday, onEdit, onAddAt }: Props) {
+export function DayView({ entries, normalHours, isHoliday, saved, onEdit, onAddAt }: Props) {
   const { activityName, projectName } = useLookups();
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
   const sorted = [...entries].sort((a, b) => a.start.localeCompare(b.start));
@@ -47,7 +49,7 @@ export function DayView({ entries, normalHours, isHoliday, onEdit, onAddAt }: Pr
           const height = (len / 60) * HOUR_PX;
           return (
             <button
-              key={e.id}
+              key={saved?.id === e.id ? `${e.id}:${saved.at}` : e.id}
               type="button"
               onClick={() => onEdit(e)}
               className="absolute right-3 left-16 flex flex-col overflow-hidden rounded-xs bg-brand-subtle px-3 py-1.5 text-left shadow-[inset_3px_0_0_var(--brand)] hover:brightness-110"
@@ -63,6 +65,7 @@ export function DayView({ entries, normalHours, isHoliday, onEdit, onAddAt }: Pr
                   {activityName(e.activityId)} · {projectName(e.projectCode)}
                 </span>
               )}
+              {saved?.id === e.id && <SavedFlash checkInside />}
             </button>
           );
         })}

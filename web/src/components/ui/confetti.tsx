@@ -9,7 +9,7 @@ const COLORS = [
   "var(--color-brand-brand-300)",
   "var(--color-brand-brand-500)",
   "var(--color-brand-brand-700)",
-  "var(--color-neutral-50)",
+  "var(--color-brand-brand-200)",
   "var(--color-neutral-400)",
 ];
 
