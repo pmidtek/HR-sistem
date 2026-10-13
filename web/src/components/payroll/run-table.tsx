@@ -6,7 +6,8 @@ import { formatNumber } from "@/lib/format";
 import { useLookups } from "../hooks";
 import { IconButton } from "../ui/button";
 import { Icon } from "../ui/icon";
-import { Table, Td, Th, Tr } from "../ui/table";
+import { Stagger, StaggerItem } from "../ui/motion";
+import { rowClass, Table, Td, Th, Tr } from "../ui/table";
 
 export type SlipTotals = { fixed: number; overtime: number; reimburse: number; other: number; deductions: number; thp: number };
 
@@ -43,12 +44,12 @@ export function RunTable({ slips, editable, onView, onEdit }: Props) {
           <Th />
         </tr>
       </thead>
-      <tbody>
-        {slips.map((p) => {
+      <Stagger as="tbody">
+        {slips.map((p, i) => {
           const t = slipTotals(p);
           const u = user(p.userId);
           return (
-            <Tr key={p.id}>
+            <StaggerItem as="tr" key={p.id} index={i} className={rowClass}>
               <Td>
                 <p className="text-sm">{userName(p.userId)}</p>
                 <p className="text-xs text-fg-subtle">{u ? teamName(u.teamId) : ""} · {p.input.ptkp}</p>
@@ -69,7 +70,7 @@ export function RunTable({ slips, editable, onView, onEdit }: Props) {
                   <Icon icon={Eye} size={14} />
                 </IconButton>
               </Td>
-            </Tr>
+            </StaggerItem>
           );
         })}
         <Tr className="bg-sunken">
@@ -82,7 +83,7 @@ export function RunTable({ slips, editable, onView, onEdit }: Props) {
           <Td className={`${num} text-sm`}>{formatNumber(totals.thp)}</Td>
           <Td />
         </Tr>
-      </tbody>
+      </Stagger>
     </Table>
   );
 }

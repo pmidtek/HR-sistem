@@ -18,6 +18,7 @@ import { EmptyState } from "../ui/display";
 import { Icon } from "../ui/icon";
 import type { Decision } from "./decision-dialog";
 import { RequestCard } from "./request-card";
+import { Stagger } from "../ui/motion";
 
 type QueueProps = { onlyPending: boolean; onDecide: (d: Decision) => void };
 
@@ -45,11 +46,12 @@ export function LeaveQueue({ onlyPending, onDecide }: QueueProps) {
     .filter(({ acts }) => !onlyPending || acts.length > 0);
   if (rows.length === 0) return <EmptyState title="Tidak ada pengajuan cuti" description="Semua sudah diproses." />;
   return (
-    <div className={grid}>
-      {rows.map(({ r, acts }) => {
+    <Stagger className={grid}>
+      {rows.map(({ r, acts }, i) => {
         const bal = state.leaveBalances.find((b) => b.userId === r.userId && b.leaveTypeId === r.leaveTypeId);
         return (
           <RequestCard
+            index={i}
             key={r.id}
             userId={r.userId}
             kind={typeName(r.leaveTypeId)}
@@ -70,7 +72,7 @@ export function LeaveQueue({ onlyPending, onDecide }: QueueProps) {
           />
         );
       })}
-    </div>
+    </Stagger>
   );
 }
 
@@ -81,11 +83,12 @@ export function OvertimeQueue({ onlyPending, onDecide }: QueueProps) {
     .filter(({ acts }) => !onlyPending || acts.length > 0);
   if (rows.length === 0) return <EmptyState title="Tidak ada pengajuan lembur" description="Semua sudah diproses." />;
   return (
-    <div className={grid}>
-      {rows.map(({ r, acts }) => {
+    <Stagger className={grid}>
+      {rows.map(({ r, acts }, i) => {
         const entries = state.timesheet.filter((e) => e.userId === r.userId && e.date === r.date).sort((a, b) => a.start.localeCompare(b.start));
         return (
           <RequestCard
+            index={i}
             key={r.id}
             userId={r.userId}
             kind={r.isHoliday ? "Lembur hari libur" : "Lembur hari kerja"}
@@ -114,7 +117,7 @@ export function OvertimeQueue({ onlyPending, onDecide }: QueueProps) {
           />
         );
       })}
-    </div>
+    </Stagger>
   );
 }
 
@@ -126,9 +129,10 @@ export function ReimburseQueue({ onlyPending, onDecide }: QueueProps) {
     .filter(({ acts }) => !onlyPending || acts.length > 0);
   if (rows.length === 0) return <EmptyState title="Tidak ada reimburse" description="Semua sudah diproses." />;
   return (
-    <div className={grid}>
-      {rows.map(({ r, acts }) => (
+    <Stagger className={grid}>
+      {rows.map(({ r, acts }, i) => (
         <RequestCard
+          index={i}
           key={r.id}
           userId={r.userId}
           kind={`${categoryName(r.categoryId)} · ${r.projectCode}`}
@@ -163,6 +167,6 @@ export function ReimburseQueue({ onlyPending, onDecide }: QueueProps) {
           })}
         />
       ))}
-    </div>
+    </Stagger>
   );
 }

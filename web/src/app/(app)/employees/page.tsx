@@ -14,7 +14,9 @@ import { Avatar, Badge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Input, Select, Switch } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
-import { Table, Td, Th, Tr } from "@/components/ui/table";
+import { Stagger, StaggerItem } from "@/components/ui/motion";
+import { rowClass, Table, Td, Th } from "@/components/ui/table";
+import { cn } from "@/lib/cn";
 
 type Draft = Omit<User, "id" | "employeeCode"> & { id?: string; employeeCode?: string };
 
@@ -50,11 +52,11 @@ export default function EmployeesPage() {
             <Th>Status</Th>
           </tr>
         </thead>
-        <tbody>
-          {rows.map((u) => {
+        <Stagger as="tbody">
+          {rows.map((u, i) => {
             const b = balance(u.id);
             return (
-              <Tr key={u.id} className={editable ? "cursor-pointer" : undefined} onClick={() => editable && setEditing(u)}>
+              <StaggerItem as="tr" key={u.id} index={i} className={cn(rowClass, editable && "cursor-pointer")} onClick={() => editable && setEditing(u)}>
                 <Td>
                   <span className="flex items-center gap-3">
                     <Avatar name={u.name} size="small" />
@@ -68,10 +70,10 @@ export default function EmployeesPage() {
                 <Td className="text-right font-mono text-xs">{b ? `${b.quota - b.used}/${b.quota}` : "-"}</Td>
                 {seeSalary && <Td className="text-right font-mono text-xs">{salaryProfiles[u.id] ? formatRupiah(salaryProfiles[u.id].base) : "-"}</Td>}
                 <Td>{u.active ? <Badge tone="success" dot>Aktif</Badge> : <Badge dot>Nonaktif</Badge>}</Td>
-              </Tr>
+              </StaggerItem>
             );
           })}
-        </tbody>
+        </Stagger>
       </Table>
 
       {editing && (

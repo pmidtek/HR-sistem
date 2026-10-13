@@ -25,6 +25,9 @@ export function Td({ className, ...rest }: TdHTMLAttributes<HTMLTableCellElement
   return <td className={cn("border-b border-line px-4 py-3 align-middle text-fg", className)} {...rest} />;
 }
 
+/** Class baris tabel; dipakai juga oleh baris beranimasi (StaggerItem as="tr"). */
+export const rowClass = "transition-colors last:[&>td]:border-b-0 hover:bg-hover";
+
 export function Tr({ className, ...rest }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn("transition-colors last:[&>td]:border-b-0 hover:bg-hover", className)} {...rest} />;
+  return <tr className={cn(rowClass, className)} {...rest} />;
 }
