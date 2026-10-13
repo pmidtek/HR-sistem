@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, Eyebrow } from "@/components/ui/display";
 import { Input } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
+import { Stagger, StaggerItem } from "@/components/ui/motion";
+import { LoginBackdrop } from "@/components/login/login-backdrop";
 
 function MicrosoftLogo() {
   return (
@@ -46,57 +48,70 @@ export default function LoginPage() {
   const demo = ["u1", "u2", "u3", "u4", "u5", "u6"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden border-r border-line glass p-12 lg:flex">
-        <Logo />
+    <div className="relative grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+      <LoginBackdrop />
+      <Stagger as="section" className="relative hidden flex-col justify-between overflow-hidden border-r border-line glass p-12 lg:flex">
+        <StaggerItem index={0}>
+          <Logo />
+        </StaggerItem>
         <div className="flex flex-col gap-6">
-          <Eyebrow tone="success">Semua sistem berjalan</Eyebrow>
-          <h1 className="max-w-lg font-serif text-6xl leading-[1.05] tracking-[-0.02em] text-fg">
-            Catat kerja hari ini. <em className="text-fg-brand">Gajian tanpa drama.</em>
-          </h1>
-          <p className="max-w-md text-md text-fg-muted">
-            Timesheet, cuti, lembur, reimburse, sampai slip gaji. Semua di satu tempat, dengan alur persetujuan yang jelas.
-          </p>
+          <StaggerItem index={1}>
+            <Eyebrow tone="success">Semua sistem berjalan</Eyebrow>
+          </StaggerItem>
+          <StaggerItem index={2}>
+            <h1 className="max-w-lg font-serif text-6xl leading-[1.05] tracking-[-0.02em] text-fg">
+              Catat kerja hari ini. <em className="text-fg-brand">Gajian tanpa drama.</em>
+            </h1>
+          </StaggerItem>
+          <StaggerItem index={3}>
+            <p className="max-w-md text-md text-fg-muted">
+              Timesheet, cuti, lembur, reimburse, sampai slip gaji. Semua di satu tempat, dengan alur persetujuan yang jelas.
+            </p>
+          </StaggerItem>
         </div>
-        <div className="grid grid-cols-3 gap-6 border-t border-line pt-6">
+        <StaggerItem index={4} className="grid grid-cols-3 gap-6 border-t border-line pt-6">
           {[["15 mnt", "Ketelitian timesheet"], ["2 tahap", "Alur persetujuan"], ["Otomatis", "Lembur & slip gaji"]].map(([v, l]) => (
             <div key={l}>
               <p className="font-serif text-3xl text-fg">{v}</p>
               <p className="text-xs text-fg-subtle">{l}</p>
             </div>
           ))}
-        </div>
-      </section>
+        </StaggerItem>
+      </Stagger>
 
       <section className="flex items-center justify-center px-6 py-12">
-        <div className="flex w-full max-w-sm flex-col gap-8">
+        <Stagger className="flex w-full max-w-sm flex-col gap-8">
           <div className="lg:hidden">
             <Logo />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <StaggerItem index={1} className="flex flex-col gap-1.5">
             <h2 className="font-display text-2xl font-medium tracking-[-0.02em]">Masuk</h2>
             <p className="text-sm text-fg-muted">Gunakan akun kantor Anda.</p>
-          </div>
+          </StaggerItem>
 
-          <Button variant="secondary" tone="neutral" fullWidth disabled iconLeft={<MicrosoftLogo />}>
-            Masuk dengan Microsoft (segera)
-          </Button>
+          <StaggerItem index={2}>
+            <Button variant="secondary" tone="neutral" fullWidth disabled iconLeft={<MicrosoftLogo />}>
+              Masuk dengan Microsoft (segera)
+            </Button>
+          </StaggerItem>
 
-          <div className="flex items-center gap-3 text-xs text-fg-subtle">
+          <StaggerItem index={3} className="flex items-center gap-3 text-xs text-fg-subtle">
             <span className="h-px flex-1 bg-line" />
             atau
             <span className="h-px flex-1 bg-line" />
-          </div>
+          </StaggerItem>
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <Input label="Email" type="email" autoComplete="email" placeholder="nama@perusahaan.co.id" value={email} onChange={(e) => setEmail(e.target.value)} iconLeft={<Icon icon={Mail} />} />
-            <Input label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} iconLeft={<Icon icon={Lock} />} error={error} />
-            <Button type="submit" fullWidth iconRight={<Icon icon={ArrowRight} />}>
-              Masuk
-            </Button>
-          </form>
+          <StaggerItem index={4}>
+            <form onSubmit={onSubmit} className="flex flex-col gap-4">
+              <Input label="Email" type="email" autoComplete="email" placeholder="nama@perusahaan.co.id" value={email} onChange={(e) => setEmail(e.target.value)} iconLeft={<Icon icon={Mail} />} />
+              <Input label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} iconLeft={<Icon icon={Lock} />} error={error} />
+              <Button type="submit" fullWidth iconRight={<Icon icon={ArrowRight} />}>
+                Masuk
+              </Button>
+            </form>
+          </StaggerItem>
 
-          <div className="flex flex-col gap-2">
+          <StaggerItem index={5} className="flex flex-col gap-2">
             <p className="font-mono text-[10px] tracking-[0.08em] text-fg-subtle uppercase">Akun demo (klik untuk masuk)</p>
             <div className="grid grid-cols-1 gap-1.5">
               {demo.map((u) => (
@@ -115,8 +130,8 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </section>
     </div>
   );
