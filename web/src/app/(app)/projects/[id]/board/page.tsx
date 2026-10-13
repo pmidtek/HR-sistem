@@ -11,7 +11,7 @@ import { TaskListView } from "@/components/projects/board/task-list-view";
 import { TaskSheet, type SheetTarget } from "@/components/projects/task-sheet/task-sheet";
 import { useProjectData } from "@/components/projects/use-project-data";
 import { useQueryParam, useQueryUpdater } from "@/components/projects/use-query-param";
-import { ComingSoon } from "@/components/projects/workspace/coming-soon";
+import { Gantt } from "@/components/projects/gantt/gantt";
 
 const VIEWS: BoardView[] = ["kanban", "list", "gantt"];
 
@@ -67,7 +67,7 @@ export default function BoardPage() {
       />
       {view === "kanban" && <Kanban boardId={boardId} tasks={boardTasks} data={data} onOpenTask={openTask} onNewTask={setCreateIn} />}
       {view === "list" && <TaskListView tasks={boardTasks} data={data} onOpenTask={openTask} />}
-      {view === "gantt" && <ComingSoon menu="Gantt" />}
+      {view === "gantt" && <Gantt tasks={filtered} data={data} onOpenTask={openTask} />}
 
       {target && <TaskSheet key={target.kind === "edit" ? target.taskId : "new"} target={target} data={data} onClose={closeSheet} onOpenTask={openTask} />}
       {boardDialog && <BoardDialog mode={boardDialog} boardId={boardId} data={data} onClose={() => setBoardDialog(null)} onSelect={setBoardParam} />}
