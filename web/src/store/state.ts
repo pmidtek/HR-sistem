@@ -31,7 +31,42 @@ import {
   reimbursements,
   timesheetEntries,
 } from "@/lib/mock/work";
-import { boardColumns, companies, opportunities, projects, tasks } from "@/lib/mock/sales";
+import { companies, opportunities } from "@/lib/mock/sales";
+import { boardColumns, boards, epics, projects, sprints, stories } from "@/lib/mock/projects/base";
+import { tasks } from "@/lib/mock/projects/tasks";
+import {
+  baselines,
+  changeRequests,
+  decisions,
+  deliverables,
+  joinRequests,
+  keyActions,
+  milestones,
+  moms,
+  notes,
+  projectLinks,
+  touchpoints,
+} from "@/lib/mock/projects/workspace";
+import { activityLogs } from "@/lib/mock/projects/activity";
+import type {
+  ActivityLog,
+  Baseline,
+  Board,
+  ChangeRequest,
+  ClientKeyAction,
+  ClientTouchpoint,
+  Decision,
+  Deliverable,
+  Epic,
+  InviteLink,
+  JoinRequest,
+  Milestone,
+  Mom,
+  Note,
+  ProjectLink,
+  Sprint,
+  Story,
+} from "@/lib/project-types";
 import { notifications, payrollRuns, payslips } from "@/lib/mock/payroll";
 
 export type DataState = {
@@ -51,8 +86,25 @@ export type DataState = {
   companies: Company[];
   opportunities: Opportunity[];
   projects: Project[];
+  boards: Board[];
   boardColumns: BoardColumn[];
   tasks: Task[];
+  epics: Epic[];
+  stories: Story[];
+  sprints: Sprint[];
+  milestones: Milestone[];
+  deliverables: Deliverable[];
+  moms: Mom[];
+  notes: Note[];
+  decisions: Decision[];
+  projectLinks: ProjectLink[];
+  touchpoints: ClientTouchpoint[];
+  keyActions: ClientKeyAction[];
+  changeRequests: ChangeRequest[];
+  baselines: Baseline[];
+  activityLogs: ActivityLog[];
+  joinRequests: JoinRequest[];
+  inviteLinks: InviteLink[];
   notifications: Notification[];
   settings: AppSettings;
 };
@@ -78,8 +130,25 @@ export const initialState: DataState = {
   companies,
   opportunities,
   projects,
+  boards,
   boardColumns,
   tasks,
+  epics,
+  stories,
+  sprints,
+  milestones,
+  deliverables,
+  moms,
+  notes,
+  decisions,
+  projectLinks,
+  touchpoints,
+  keyActions,
+  changeRequests,
+  baselines,
+  activityLogs,
+  joinRequests,
+  inviteLinks: [],
   notifications,
   settings: defaultSettings,
 };

@@ -7,7 +7,9 @@ import { formatDate } from "@/lib/format";
 import { canEditProject, canSeeProject, projectProgress } from "@/lib/projects";
 import type { ProjectStatus } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { moveTask, setProjectStatus } from "@/store/actions-business";
+import { setProjectStatus } from "@/store/actions-business";
+import { moveTask } from "@/store/actions-tasks";
+import { stamp } from "@/store/project-core";
 import { useLookups } from "@/components/hooks";
 import { TaskBoard } from "@/components/projects/task-board";
 import { TaskDialog, type TaskDraft } from "@/components/projects/task-dialog";
@@ -23,7 +25,7 @@ import { Tabs } from "@/components/ui/tabs";
 
 export default function ProjectDetailPage({ params }: PageProps<"/projects/[id]">) {
   const { id } = use(params);
-  const { state, user, today, run } = useAuthed();
+  const { state, user, actor, today, run } = useAuthed();
   const { teamName, userName } = useLookups();
   const [view, setView] = useState<"board" | "list">("board");
   const [task, setTask] = useState<TaskDraft | null>(null);
@@ -36,7 +38,7 @@ export default function ProjectDetailPage({ params }: PageProps<"/projects/[id]"
   const tasks = state.tasks.filter((t) => t.projectId === id);
   const progress = projectProgress(id, state.tasks, state.boardColumns);
   const opp = state.opportunities.find((o) => o.id === project.opportunityId);
-  const newTask = (columnId: string): TaskDraft => ({ projectId: id, columnId, title: "", assigneeId: null, priority: "medium", deadline: null, labels: [], checklist: [] });
+  const newTask = (columnId: string): TaskDraft => ({ projectId: id, boardId: columns.find((c) => c.id === columnId)?.boardId ?? "", columnId, title: "" });
 
   return (
     <>
@@ -77,7 +79,7 @@ export default function ProjectDetailPage({ params }: PageProps<"/projects/[id]"
           today={today}
           onOpen={(t) => setTask(t)}
           onAdd={(c) => setTask(newTask(c))}
-          onMove={(taskId, columnId) => editable && run((s) => moveTask(s, taskId, columnId))}
+          onMove={(taskId, columnId) => editable && run((s) => moveTask(s, taskId, columnId, null, actor, stamp(today)))}
         />
       ) : (
         <Table>
@@ -87,7 +89,7 @@ export default function ProjectDetailPage({ params }: PageProps<"/projects/[id]"
               <Tr key={t.id} className="cursor-pointer" onClick={() => setTask(t)}>
                 <Td>{t.title}</Td>
                 <Td className="text-fg-muted">{columns.find((c) => c.id === t.columnId)?.name}</Td>
-                <Td className="text-fg-muted">{userName(t.assigneeId)}</Td>
+                <Td className="text-fg-muted">{userName(t.assigneeIds[0] ?? null)}</Td>
                 <Td><PriorityBadge priority={t.priority} /></Td>
                 <Td className="text-fg-muted">{t.deadline ? formatDate(t.deadline) : "-"}</Td>
               </Tr>

@@ -4,7 +4,8 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { useAuthed } from "@/store/app-provider";
-import { createProject } from "@/store/actions-business";
+import { createProject } from "@/store/actions-boards";
+import { stamp } from "@/store/project-core";
 import { useLookups } from "../hooks";
 import { Button } from "../ui/button";
 import { Combobox } from "../ui/combobox";
@@ -15,7 +16,7 @@ import { Icon } from "../ui/icon";
 
 /** Buat project baru. Kode PRYYXXXX otomatis. Klien opsional (kosong = project internal). */
 export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
-  const { state, today, run } = useAuthed();
+  const { state, actor, today, run } = useAuthed();
   const { userOptions, userName } = useLookups();
   const [name, setName] = useState("");
   const [companyId, setCompanyId] = useState("");
@@ -31,7 +32,7 @@ export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
     if (!valid) return;
     const memberIds = [...new Set([leadId, ...members])];
     const ok = run(
-      (s) => createProject(s, { name, opportunityId: null, companyId: companyId || null, teamIds, leadId, memberIds, startDate: start, targetDate: target }, today),
+      (s) => createProject(s, { name, companyId: companyId || null, teamIds, leadId, memberIds, startDate: start, targetDate: target }, actor, today, stamp(today)),
       "Project dibuat dan kodenya siap dipakai di timesheet.",
     );
     if (ok) onClose();

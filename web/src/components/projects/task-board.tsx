@@ -71,7 +71,7 @@ export function TaskBoard({ columns, tasks, editable, today, onOpen, onAdd, onMo
                           <span className="ml-2 inline-flex items-center gap-1"><Icon icon={CheckSquare} size={10} />{done}/{t.checklist.length}</span>
                         )}
                       </span>
-                      {t.assigneeId && <Avatar name={userName(t.assigneeId)} size="small" />}
+                      {t.assigneeIds[0] && <Avatar name={userName(t.assigneeIds[0])} size="small" />}
                     </span>
                   </button>
                 );

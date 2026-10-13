@@ -4,6 +4,7 @@
  */
 
 import type { PayrollInput } from "./calc/payroll";
+import type { ClientContactRole, ProjectLabel, ProjectMember } from "./project-types";
 
 export type Role = "stakeholder" | "hr" | "finance" | "employee";
 
@@ -138,12 +139,14 @@ export type PayrollRun = {
   logs: ApprovalLog[];
 };
 
+export type CompanyContact = { id: string; name: string; title: string; email: string; phone: string };
+
 export type Company = {
   id: string;
   name: string;
   industry: string;
   website: string;
-  contacts: { name: string; title: string; email: string; phone: string }[];
+  contacts: CompanyContact[];
 };
 
 export type OpportunityStage = "lead" | "qualification" | "proposal" | "negotiation" | "won" | "lost";
@@ -171,28 +174,74 @@ export type Project = {
   /** Klien (company) project; null = project internal. */
   companyId: string | null;
   teamIds: string[];
+  /** Lead utama (ditampilkan di header). Disinkronkan dari `members` lewat syncMembers(). */
   leadId: string;
+  /** Semua anggota (lead, member, viewer). Disinkronkan dari `members`. */
   memberIds: string[];
   startDate: string;
   targetDate: string;
   status: ProjectStatus;
+  description: string;
+  /** Warna aksen project (token warna brand/neutral, mis. "var(--color-brand-brand-500)"). */
+  color: string;
+  members: ProjectMember[];
+  labels: ProjectLabel[];
+  /** Nama kolom untuk board baru. */
+  defaultColumns: string[];
+  /** Tautan cepat di header (id ProjectLink, maks 3). */
+  quickLinkIds: string[];
+  /** Peran kontak klien di project (kunci: CompanyContact.id). */
+  clientContactRoles: Record<string, ClientContactRole>;
+  archived: boolean;
 };
 
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
 
+export type TaskComment = { id: string; authorId: string; body: string; createdAt: string };
+export type Attachment = { id: string; name: string; url: string; size: number; uploadedBy: string; uploadedAt: string };
+
 export type Task = {
   id: string;
   projectId: string;
+  boardId: string;
   columnId: string;
+  /** Nomor urut per project, tampil sebagai #17. */
+  number: number;
+  /** Urutan di dalam kolom (kecil = atas). */
+  order: number;
   title: string;
-  assigneeId: string | null;
+  description: string;
+  assigneeIds: string[];
   priority: TaskPriority;
-  deadline: string | null;
+  /** Id ProjectLabel. */
   labels: string[];
-  checklist: { text: string; done: boolean }[];
+  storyId: string | null;
+  sprintId: string | null;
+  startDate: string | null;
+  deadline: string | null;
+  estimateHours: number | null;
+  /** Id task lain yang harus selesai dulu. */
+  dependsOn: string[];
+  blocked: boolean;
+  blockedReason: string | null;
+  checklist: { id: string; text: string; done: boolean }[];
+  comments: TaskComment[];
+  attachments: Attachment[];
+  createdBy: string;
+  createdAt: string;
+  /** Diisi saat masuk kolom selesai; dipakai burndown, velocity, S-curve. */
+  completedAt: string | null;
 };
 
-export type BoardColumn = { id: string; projectId: string; name: string; order: number; isDone: boolean };
+export type BoardColumn = {
+  id: string;
+  projectId: string;
+  boardId: string;
+  name: string;
+  order: number;
+  isDone: boolean;
+  color: string | null;
+};
 
 export type Notification = {
   id: string;

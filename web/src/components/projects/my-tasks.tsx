@@ -12,7 +12,7 @@ export function MyTasks() {
   const { state, user, today } = useAuthed();
   const doneCols = new Set(state.boardColumns.filter((c) => c.isDone).map((c) => c.id));
   const tasks = state.tasks
-    .filter((t) => t.assigneeId === user.id && !doneCols.has(t.columnId))
+    .filter((t) => t.assigneeIds.includes(user.id) && !doneCols.has(t.columnId))
     .sort((a, b) => (a.deadline ?? "9999").localeCompare(b.deadline ?? "9999"));
   if (tasks.length === 0) return <EmptyState title="Tidak ada task aktif" description="Task yang di-assign ke Anda akan muncul di sini." />;
   return (

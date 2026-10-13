@@ -1,49 +1,8 @@
 /** Mutasi untuk sales, project, payroll, dan notifikasi (simulasi endpoint). */
 import type { Actor } from "@/lib/calc/approval";
-import type { PayrollRunStatus, Project, Task, User } from "@/lib/types";
+import type { PayrollRunStatus, Project, User } from "@/lib/types";
 import { ActionError } from "./actions";
 import { newId, nowIso, type DataState } from "./state";
-
-function nextCode(prefix: "PR", existing: string[], year: string): string {
-  const yy = year.slice(2);
-  const max = existing
-    .filter((c) => c.startsWith(`${prefix}${yy}`))
-    .reduce((m, c) => Math.max(m, Number(c.slice(4))), 0);
-  return `${prefix}${yy}${String(max + 1).padStart(4, "0")}`;
-}
-
-export function createProject(s: DataState, input: Omit<Project, "id" | "code" | "status">, today: string): DataState {
-  const id = newId("p");
-  const code = nextCode("PR", s.projects.map((p) => p.code), today.slice(0, 4));
-  const project: Project = { ...input, id, code, status: "not_started" };
-  const columns = ["Backlog", "To Do", "In Progress", "Review", "Done"].map((name, i) => ({
-    id: `${id}-c${i}`, projectId: id, name, order: i, isDone: name === "Done",
-  }));
-  const notes = input.memberIds.map((userId) => ({
-    id: newId("n"), userId, title: "Ditambahkan ke project", body: `Anda ditambahkan ke project ${code} — ${input.name}.`,
-    href: `/projects/${id}`, createdAt: nowIso(), read: false,
-  }));
-  return {
-    ...s,
-    projects: [project, ...s.projects],
-    boardColumns: [...s.boardColumns, ...columns],
-    notifications: [...notes, ...s.notifications],
-  };
-}
-
-export function saveTask(s: DataState, task: Omit<Task, "id"> & { id?: string }, actorId: string): DataState {
-  if (task.id) return { ...s, tasks: s.tasks.map((t) => (t.id === task.id ? { ...t, ...task, id: t.id } : t)) };
-  const created: Task = { ...task, id: newId("task") };
-  const project = s.projects.find((p) => p.id === task.projectId);
-  const notes = task.assigneeId && task.assigneeId !== actorId
-    ? [{ id: newId("n"), userId: task.assigneeId, title: "Task baru untuk Anda", body: `${task.title} (${project?.code ?? ""})`, href: `/projects/${task.projectId}`, createdAt: nowIso(), read: false }]
-    : [];
-  return { ...s, tasks: [...s.tasks, created], notifications: [...notes, ...s.notifications] };
-}
-
-export function moveTask(s: DataState, taskId: string, columnId: string): DataState {
-  return { ...s, tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, columnId } : t)) };
-}
 
 const payrollFlow: Record<string, { from: PayrollRunStatus[]; to: PayrollRunStatus; role: Actor["role"] }> = {
   submit: { from: ["draft", "returned"], to: "pending", role: "finance" },
