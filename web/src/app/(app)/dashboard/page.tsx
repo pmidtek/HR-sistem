@@ -5,6 +5,7 @@ import { useAuthed } from "@/store/app-provider";
 import { ActionSection, FinanceSection, PeopleSection, ProjectSalesSection } from "@/components/dashboard/sections";
 import { MySection } from "@/components/dashboard/my-section";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
+import { CountUpScope } from "@/components/ui/motion";
 
 export default function DashboardPage() {
   const { user, team, today } = useAuthed();
@@ -12,41 +13,43 @@ export default function DashboardPage() {
   const role = user.role;
 
   return (
-    <div className="flex flex-col gap-10">
-      <PageHeader title={`Halo, ${firstName}.`} accent={role === "stakeholder" ? "Ini ringkasan perusahaan." : "Siap kerja?"} description={formatDate(today)} />
+    <CountUpScope id="dashboard">
+      <div className="flex flex-col gap-10">
+        <PageHeader title={`Halo, ${firstName}.`} accent={role === "stakeholder" ? "Ini ringkasan perusahaan." : "Siap kerja?"} description={formatDate(today)} />
 
-      {role !== "employee" && (
+        {role !== "employee" && (
+          <div>
+            <SectionTitle>Perlu tindakan saya</SectionTitle>
+            <ActionSection />
+          </div>
+        )}
+
+        {role === "stakeholder" && (
+          <div>
+            <SectionTitle>Project & sales</SectionTitle>
+            <ProjectSalesSection />
+          </div>
+        )}
+
+        {(role === "stakeholder" || role === "hr") && (
+          <div>
+            <SectionTitle>SDM</SectionTitle>
+            <PeopleSection />
+          </div>
+        )}
+
+        {(role === "stakeholder" || role === "finance") && (
+          <div>
+            <SectionTitle>Keuangan</SectionTitle>
+            <FinanceSection />
+          </div>
+        )}
+
         <div>
-          <SectionTitle>Perlu tindakan saya</SectionTitle>
-          <ActionSection />
+          <SectionTitle>Pekerjaan saya</SectionTitle>
+          <MySection showTasks={team?.kind === "delivery"} delay={role === "employee" ? 0 : 0.24} />
         </div>
-      )}
-
-      {role === "stakeholder" && (
-        <div>
-          <SectionTitle>Project & sales</SectionTitle>
-          <ProjectSalesSection />
-        </div>
-      )}
-
-      {(role === "stakeholder" || role === "hr") && (
-        <div>
-          <SectionTitle>SDM</SectionTitle>
-          <PeopleSection />
-        </div>
-      )}
-
-      {(role === "stakeholder" || role === "finance") && (
-        <div>
-          <SectionTitle>Keuangan</SectionTitle>
-          <FinanceSection />
-        </div>
-      )}
-
-      <div>
-        <SectionTitle>Pekerjaan saya</SectionTitle>
-        <MySection showTasks={team?.kind === "delivery"} />
       </div>
-    </div>
+    </CountUpScope>
   );
 }

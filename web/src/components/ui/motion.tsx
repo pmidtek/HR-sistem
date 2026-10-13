@@ -63,10 +63,9 @@ export function FadeIn({ children, className, delay = 0, y = 8 }: FadeInProps) {
   );
 }
 
-const containerVariants: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.04 } },
-};
+function containerVariants(delay: number): Variants {
+  return { hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: delay } } };
+}
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 6 },
@@ -76,13 +75,19 @@ const itemVariants: Variants = {
 const containers = { div: motion.div, section: motion.section, tbody: motion.tbody, ul: motion.ul };
 const items = { div: motion.div, tr: motion.tr, li: motion.li, section: motion.section };
 
-type StaggerProps = { children: ReactNode; className?: string; as?: keyof typeof containers };
+type StaggerProps = {
+  children: ReactNode;
+  className?: string;
+  as?: keyof typeof containers;
+  /** Jeda (detik) sebelum item pertama muncul; untuk mengurutkan beberapa section. */
+  delay?: number;
+};
 
 /** Wadah daftar: anak-anak StaggerItem muncul berurutan. */
-export function Stagger({ children, className, as = "div" }: StaggerProps) {
+export function Stagger({ children, className, as = "div", delay = 0 }: StaggerProps) {
   const Comp = containers[as];
   return (
-    <Comp className={className} variants={containerVariants} initial="hidden" animate="show">
+    <Comp className={className} variants={containerVariants(delay)} initial="hidden" animate="show">
       {children}
     </Comp>
   );

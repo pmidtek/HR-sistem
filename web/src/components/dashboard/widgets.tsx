@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Card } from "../ui/display";
+import { CountUp, GrowBar, StaggerItem } from "../ui/motion";
 
 /** Satu seri, horizontal: magnitudo per kategori. Teks memakai token teks; warna hanya di bar. */
 export function BarList({ rows, format }: { rows: { label: string; value: number; hint?: string }[]; format: (v: number) => string }) {
@@ -13,7 +16,7 @@ export function BarList({ rows, format }: { rows: { label: string; value: number
         <div key={r.label} role="row" title={`${r.label}: ${format(r.value)}`} className="group grid grid-cols-[minmax(0,140px)_1fr_auto] items-center gap-3">
           <span role="cell" className="truncate text-xs text-fg-muted">{r.label}</span>
           <span className="h-2 overflow-hidden rounded-[4px] bg-hover">
-            <span className="block h-full rounded-[4px] bg-brand transition-opacity group-hover:opacity-80" style={{ width: `${(r.value / max) * 100}%` }} />
+            <GrowBar ratio={r.value / max} className="h-full w-full rounded-[4px] bg-brand transition-opacity group-hover:opacity-80" />
           </span>
           <span role="cell" className="text-right font-mono text-xs text-fg">{format(r.value)}</span>
         </div>
@@ -22,27 +25,32 @@ export function BarList({ rows, format }: { rows: { label: string; value: number
   );
 }
 
+/** Panel dashboard. Otomatis ikut stagger jika berada di dalam <Stagger>. */
 export function Panel({ title, aside, children, className }: { title: string; aside?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <Card padding="lg" className={cn("flex flex-col gap-4", className)}>
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="font-display text-sm font-medium">{title}</h3>
-        {aside}
-      </div>
-      {children}
-    </Card>
+    <StaggerItem className="flex">
+      <Card padding="lg" className={cn("flex w-full flex-col gap-4", className)}>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-sm font-medium">{title}</h3>
+          {aside}
+        </div>
+        {children}
+      </Card>
+    </StaggerItem>
   );
 }
 
 export function ActionTile({ label, count, href }: { label: string; count: number; href: string }) {
   return (
-    <Link href={href}>
-      <Card interactive tone={count > 0 ? "brand" : "raised"} className="flex flex-col gap-1">
-        <span className="text-xs text-fg-muted">{label}</span>
-        <span className="font-serif text-4xl leading-none">{count}</span>
-        <span className="text-xs text-fg-subtle">{count > 0 ? "menunggu keputusan" : "tidak ada"}</span>
-      </Card>
-    </Link>
+    <StaggerItem>
+      <Link href={href}>
+        <Card interactive tone={count > 0 ? "brand" : "raised"} className="flex flex-col gap-1">
+          <span className="text-xs text-fg-muted">{label}</span>
+          <CountUp value={count} className="font-serif text-4xl leading-none" />
+          <span className="text-xs text-fg-subtle">{count > 0 ? "menunggu keputusan" : "tidak ada"}</span>
+        </Card>
+      </Link>
+    </StaggerItem>
   );
 }
 

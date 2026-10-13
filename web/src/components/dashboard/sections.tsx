@@ -10,18 +10,19 @@ import { daySummaries, useLookups } from "../hooks";
 import { slipTotals } from "../payroll/run-table";
 import { pendingFor } from "../shell/pending";
 import { Badge, Stat } from "../ui/display";
+import { CountUp, Stagger } from "../ui/motion";
 import { ActionTile, BarList, MiniList, Panel } from "./widgets";
 
 export function ActionSection() {
   const { state, actor } = useAuthed();
   const p = pendingFor(state, actor);
   return (
-    <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <Stagger as="section" className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <ActionTile label="Cuti" count={p.leave} href="/approvals" />
       <ActionTile label="Lembur" count={p.overtime} href="/approvals" />
       <ActionTile label="Reimburse" count={p.reimburse} href="/approvals" />
       <ActionTile label="Payroll" count={p.payroll} href="/payroll" />
-    </section>
+    </Stagger>
   );
 }
 
@@ -44,7 +45,7 @@ export function ProjectSalesSection() {
   });
 
   return (
-    <section className="grid gap-4 lg:grid-cols-3">
+    <Stagger as="section" delay={0.06} className="grid gap-4 lg:grid-cols-3">
       <Panel title="Project ongoing" aside={<Badge>{active.length}</Badge>}>
         <MiniList items={active.map((p) => ({ ...projectItem(p), right: `${p.teamIds.map(teamName).join(", ")} · ${prog(p.id)}%` }))} empty="Tidak ada project aktif." />
       </Panel>
@@ -59,7 +60,7 @@ export function ProjectSalesSection() {
         </div>
         {ready.length > 0 && <Link href="/sales" className="text-xs text-fg-brand hover:underline">{ready.length} opportunity Won siap dijadikan project</Link>}
       </Panel>
-    </section>
+    </Stagger>
   );
 }
 
@@ -78,8 +79,8 @@ export function PeopleSection() {
   const noLeave = state.leaveBalances.filter((b) => b.used === 0);
 
   return (
-    <section className="grid gap-4 lg:grid-cols-3">
-      <Panel title="Pegawai aktif per tim" aside={<span className="font-serif text-2xl">{active.length}</span>}>
+    <Stagger as="section" delay={0.12} className="grid gap-4 lg:grid-cols-3">
+      <Panel title="Pegawai aktif per tim" aside={<CountUp value={active.length} className="font-serif text-2xl" />}>
         <BarList format={(v) => String(v)} rows={state.teams.map((t) => ({ label: t.name, value: active.filter((u) => u.teamId === t.id).length }))} />
       </Panel>
       <Panel title="Cuti minggu ini">
@@ -96,7 +97,7 @@ export function PeopleSection() {
           <MiniList items={incomplete.map((u) => ({ key: u.id, left: userName(u.id) }))} empty="Semua lengkap." />
         </div>
       </Panel>
-    </section>
+    </Stagger>
   );
 }
 
@@ -110,7 +111,7 @@ export function FinanceSection() {
   const [cur, prev] = runs;
 
   return (
-    <section className="grid gap-4 lg:grid-cols-3">
+    <Stagger as="section" delay={0.18} className="grid gap-4 lg:grid-cols-3">
       <Panel title="Reimburse 30 hari terakhir · per kategori">
         <BarList format={formatRupiah} rows={byCat.filter((r) => r.value > 0)} />
       </Panel>
@@ -119,11 +120,11 @@ export function FinanceSection() {
       </Panel>
       <Panel title="Payroll">
         <div className="grid grid-cols-2 gap-4">
-          <Stat label={cur ? formatPeriod(cur.period) : "-"} value={<span className="text-2xl">{formatRupiah(total(cur?.id))}</span>} />
-          <Stat label={prev ? formatPeriod(prev.period) : "-"} value={<span className="text-2xl text-fg-muted">{formatRupiah(total(prev?.id))}</span>} />
+          <Stat label={cur ? formatPeriod(cur.period) : "-"} value={<CountUp value={total(cur?.id)} format={formatRupiah} className="text-2xl" />} />
+          <Stat label={prev ? formatPeriod(prev.period) : "-"} value={<CountUp value={total(prev?.id)} format={formatRupiah} className="text-2xl text-fg-muted" />} />
         </div>
         <Link href="/payroll" className="text-xs text-fg-brand hover:underline">Buka payroll</Link>
       </Panel>
-    </section>
+    </Stagger>
   );
 }
