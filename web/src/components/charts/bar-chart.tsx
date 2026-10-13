@@ -23,6 +23,9 @@ export function BarChart({ categories, series, height = 220, yFormat = (v) => St
   const bar = Math.max(4, Math.min(BAR_MAX, (band * 0.7 - GAP * (series.length - 1)) / series.length));
   const group = bar * series.length + GAP * (series.length - 1);
   const py = (v: number) => PAD.top + h - (v / top) * h;
+  // Jarangkan label kategori bila terlalu rapat (label penuh tetap ada di tooltip).
+  const longest = Math.max(1, ...categories.map((c) => c.length));
+  const labelEvery = Math.max(1, Math.ceil((longest * 6.5 + 8) / Math.max(1, band)));
   const bx = (c: number, s: number) => PAD.left + c * band + (band - group) / 2 + s * (bar + GAP);
 
   /** Kolom dengan ujung atas membulat 4px dan dasar persegi. */
@@ -45,7 +48,7 @@ export function BarChart({ categories, series, height = 220, yFormat = (v) => St
           ))}
           {categories.map((cat, c) => (
             <g key={cat}>
-              <text x={PAD.left + c * band + band / 2} y={height - 8} textAnchor="middle" className="fill-[var(--text-tertiary)] font-mono text-[10px]">{cat}</text>
+              {c % labelEvery === 0 && <text x={PAD.left + c * band + band / 2} y={height - 8} textAnchor="middle" className="fill-[var(--text-tertiary)] font-mono text-[10px]">{cat}</text>}
               {series.map((s, si) => {
                 const v = s.values[c];
                 if (v === null || v === undefined) return null;
