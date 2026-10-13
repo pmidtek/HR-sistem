@@ -10,7 +10,7 @@ import { Kanban } from "@/components/projects/board/kanban";
 import { TaskListView } from "@/components/projects/board/task-list-view";
 import { TaskSheet, type SheetTarget } from "@/components/projects/task-sheet/task-sheet";
 import { useProjectData } from "@/components/projects/use-project-data";
-import { useQueryParam } from "@/components/projects/use-query-param";
+import { useQueryParam, useQueryUpdater } from "@/components/projects/use-query-param";
 import { ComingSoon } from "@/components/projects/workspace/coming-soon";
 
 const VIEWS: BoardView[] = ["kanban", "list", "gantt"];
@@ -20,8 +20,9 @@ export default function BoardPage() {
   const data = useProjectData();
   const [boardParam, setBoardParam] = useQueryParam("board");
   const [viewParam, setViewParam] = useQueryParam("view");
-  const [taskParam, setTaskParam] = useQueryParam("task");
-  const [newParam, setNewParam] = useQueryParam("new");
+  const [taskParam] = useQueryParam("task");
+  const [newParam] = useQueryParam("new");
+  const updateQuery = useQueryUpdater();
   const [filters, setFilters] = useState<TaskFilters>(emptyFilters);
   const [createIn, setCreateIn] = useState<string | null>(null);
   const [boardDialog, setBoardDialog] = useState<BoardDialogMode | null>(null);
@@ -43,13 +44,11 @@ export default function BoardPage() {
 
   const closeSheet = () => {
     setCreateIn(null);
-    if (newParam) setNewParam(null);
-    if (taskParam) setTaskParam(null);
+    updateQuery({ new: null, task: null });
   };
   const openTask = (id: string) => {
     setCreateIn(null);
-    if (newParam) setNewParam(null);
-    setTaskParam(id);
+    updateQuery({ new: null, task: id });
   };
 
   return (

@@ -35,6 +35,11 @@ export function canManageProject(user: User, p: Project): boolean {
   return user.role === "stakeholder" || projectRole(user, p) === "lead";
 }
 
+/** Dokumen yang sudah published (MOM) hanya bisa diedit penulis, lead, atau stakeholder. */
+export function canEditPublished(user: User, p: Project, authorId: string): boolean {
+  return canEditProject(user, p) && (user.id === authorId || canManageProject(user, p));
+}
+
 export function canDeleteProject(user: User): boolean {
   return user.role === "stakeholder";
 }

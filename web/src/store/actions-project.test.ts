@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { addColumn, deleteColumn } from "./actions-boards";
 import { saveDeliverable, saveMilestone, setDeliverableStatus, toggleMilestoneDone } from "./actions-plan";
 import { completeSprint, deleteSprint, setSprintTasks, startSprint } from "./actions-sprints";
+import { actionItemToTask, publishMom, saveMom } from "./actions-mom";
+import { saveDecision, saveLink } from "./actions-files";
 import { addComment, createTask, moveTask, updateTask } from "./actions-tasks";
 import { initialState } from "./state";
 
@@ -109,5 +111,38 @@ describe("aksi sprint", () => {
     const withTask = setSprintTasks(initialState, "p3-s7", ["p3-t11"], lead, AT);
     const s = deleteSprint(withTask, "p3-s7", lead, AT);
     expect(s.tasks.find((t) => t.id === "p3-t11")?.sprintId).toBeNull();
+  });
+});
+
+describe("aksi MOM & files", () => {
+  it("MOM published hanya bisa diedit penulis/lead; publish memberi notifikasi peserta", () => {
+    // p3-mom2 published, penulis u6 (Maya, member). Rizky (member, bukan penulis) ditolak.
+    expect(() => saveMom(initialState, "p3-mom2", { title: "Ubah" }, { id: "u8", role: "employee" }, AT)).toThrow(/penulis/);
+    expect(() => saveMom(initialState, "p3-mom2", { title: "Ubah" }, lead, AT)).not.toThrow();
+    const s = publishMom(initialState, "p3-mom3", { id: "u6", role: "employee" }, AT);
+    expect(s.moms.find((m) => m.id === "p3-mom3")?.status).toBe("published");
+    expect(s.notifications[0]).toMatchObject({ userId: "u4", title: "MOM baru dipublikasikan" });
+  });
+
+  it("action item jadi task dan tertaut", () => {
+    const s = actionItemToTask(initialState, "p3-mom3", "a1", "p3-b3", lead, AT, "task-baru");
+    expect(s.tasks.find((t) => t.id === "task-baru")).toMatchObject({ title: "Konfirmasi jadwal UAT ke klien", columnId: "p3-b3-c0", assigneeIds: ["u6"] });
+    expect(s.moms.find((m) => m.id === "p3-mom3")?.actionItems[0].taskId).toBe("task-baru");
+    expect(() => actionItemToTask(s, "p3-mom3", "a1", "p3-b3", lead, AT)).toThrow(/sudah/);
+  });
+
+  it("keputusan baru dapat nomor DR berikut & menggantikan yang lama", () => {
+    const s = saveDecision(initialState, "p3", {
+      title: "Laporan selisih format CSV", context: "", decision: "", consequences: "", category: "Pelaporan", status: "accepted",
+      decidedById: "u4", decidedAt: "2026-10-07", sourceMomId: null, supersedesId: "p3-dr4",
+    }, lead, AT);
+    const created = s.decisions.find((d) => d.title === "Laporan selisih format CSV");
+    expect(created?.number).toBe(5);
+    expect(s.decisions.find((d) => d.id === "p3-dr4")?.status).toBe("superseded");
+    expect(s.activityLogs[0].targetRef).toBe("DR-005");
+  });
+
+  it("tautan wajib URL http(s)", () => {
+    expect(() => saveLink(initialState, "p3", { label: "Doc", url: "docs.example.com", category: "Dokumen" }, lead, AT)).toThrow(/http/);
   });
 });

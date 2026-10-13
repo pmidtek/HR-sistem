@@ -32,11 +32,11 @@ export default function ProjectLayout({ children, params }: LayoutProps<"/projec
 
   return (
     <ProjectWorkspaceProvider value={workspace}>
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-5 md:grid-cols-[196px_minmax(0,1fr)]">
-        <div className="min-w-0 md:col-start-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-5 md:grid-cols-[196px_minmax(0,1fr)] print:block">
+        <div className="min-w-0 md:col-start-2 print:hidden">
           <ProjectHeader />
         </div>
-        <div className="min-w-0 md:col-start-1 md:row-span-2 md:row-start-1">
+        <div className="min-w-0 md:col-start-1 md:row-span-2 md:row-start-1 print:hidden">
           <ProjectNav />
         </div>
         <div className="min-w-0 md:col-start-2">

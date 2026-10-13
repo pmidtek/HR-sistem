@@ -21,3 +21,21 @@ export function useQueryParam(key: string): [string | null, (value: string | nul
   );
   return [value, set];
 }
+
+/** Ubah beberapa query param sekaligus (null = hapus). */
+export function useQueryUpdater(): (patch: Record<string, string | null>) => void {
+  const router = useRouter();
+  const pathname = usePathname();
+  return useCallback(
+    (patch: Record<string, string | null>) => {
+      const p = new URLSearchParams(window.location.search);
+      for (const [k, v] of Object.entries(patch)) {
+        if (v === null || v === "") p.delete(k);
+        else p.set(k, v);
+      }
+      const qs = p.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router],
+  );
+}
