@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addColumn, deleteColumn } from "./actions-boards";
 import { saveDeliverable, saveMilestone, setDeliverableStatus, toggleMilestoneDone } from "./actions-plan";
+import { completeSprint, deleteSprint, setSprintTasks, startSprint } from "./actions-sprints";
 import { addComment, createTask, moveTask, updateTask } from "./actions-tasks";
 import { initialState } from "./state";
 
@@ -85,5 +86,28 @@ describe("aksi milestone & deliverable", () => {
     expect(s.activityLogs[0]).toMatchObject({ kind: "deliverable_status", text: 'Deliverable "Dokumentasi API publik" → Review' });
     const d = initialState.deliverables.find((x) => x.id === "p3-d4");
     expect(() => d && saveDeliverable(initialState, "p3", { ...d, link: "drive.google.com/x" }, lead, AT)).toThrow(/http/);
+  });
+});
+
+describe("aksi sprint", () => {
+  it("hanya satu sprint aktif per tim", () => {
+    expect(() => startSprint(initialState, "p3-s7", lead, AT)).toThrow(/aktif/);
+  });
+
+  it("selesaikan sprint: task belum selesai pindah ke sprint berikut", () => {
+    const s = completeSprint(initialState, "p3-s6", "p3-s7", lead, AT);
+    expect(s.sprints.find((x) => x.id === "p3-s6")?.status).toBe("completed");
+    expect(s.tasks.find((t) => t.id === "p3-t6")?.sprintId).toBe("p3-s7");
+    expect(s.tasks.find((t) => t.id === "p3-t8")?.sprintId).toBe("p3-s6"); // sudah selesai, tetap
+    // Setelah itu Sprint 7 boleh dimulai dan snapshot berisi task pindahan.
+    const started = startSprint(s, "p3-s7", lead, AT);
+    expect(started.sprints.find((x) => x.id === "p3-s7")?.plannedTaskIds).toContain("p3-t6");
+  });
+
+  it("hanya sprint planned yang bisa dihapus; task kembali ke backlog", () => {
+    expect(() => deleteSprint(initialState, "p3-s6", lead, AT)).toThrow();
+    const withTask = setSprintTasks(initialState, "p3-s7", ["p3-t11"], lead, AT);
+    const s = deleteSprint(withTask, "p3-s7", lead, AT);
+    expect(s.tasks.find((t) => t.id === "p3-t11")?.sprintId).toBeNull();
   });
 });
