@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { OvertimeSettings } from "../settings-types";
-import { formatDate, formatRupiah, terbilang } from "../format";
+import { formatDate, formatRelative, formatRupiah, terbilang } from "../format";
 import { countWorkingDays, hasSufficientBalance } from "./leave";
 import { dailyOvertime, overtimeBreakdown, overtimePay, overtimePerEntry } from "./overtime";
 import { overlaps, validateEntry, type ValidationContext } from "./timesheet";
@@ -161,5 +161,17 @@ describe("format", () => {
     expect(todayJakarta(new Date("2026-10-04T18:00:00Z"))).toBe("2026-10-05");
     expect(endOfMonth("2026-12")).toBe("2026-12-31");
     expect(endOfMonth("2028-02")).toBe("2028-02-29");
+  });
+});
+
+describe("waktu relatif", () => {
+  const now = "2026-10-07T12:00:00+07:00";
+  it("baru saja, menit, jam, hari, bulan, tahun", () => {
+    expect(formatRelative("2026-10-07T11:59:30+07:00", now)).toBe("baru saja");
+    expect(formatRelative("2026-10-07T11:55:00+07:00", now)).toBe("5 mnt lalu");
+    expect(formatRelative("2026-10-07T09:00:00+07:00", now)).toBe("3 jam lalu");
+    expect(formatRelative("2026-10-05T12:00:00+07:00", now)).toBe("2 hr lalu");
+    expect(formatRelative("2026-06-01T12:00:00+07:00", now)).toBe("4 bln lalu");
+    expect(formatRelative("2025-09-01T12:00:00+07:00", now)).toBe("1 thn lalu");
   });
 });

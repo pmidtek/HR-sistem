@@ -47,11 +47,11 @@ export function createProject(s: DataState, input: NewProjectInput, actor: Actor
   return withNotify(next, project.memberIds, actor.id, "Ditambahkan ke project", `Anda ditambahkan ke project ${code} — ${project.name}.`, `/projects/${id}`, at);
 }
 
-export function createBoard(s: DataState, projectId: string, name: string, actor: Actor, at: string): DataState {
+export function createBoard(s: DataState, projectId: string, name: string, actor: Actor, at: string, id: string = newId("b")): DataState {
   const p = assertManage(s, projectId, actor);
   if (!name.trim()) throw new ActionError("Nama board wajib diisi.");
   const order = s.boards.filter((b) => b.projectId === projectId).length;
-  const board: Board = { id: newId("b"), projectId, name: name.trim(), order };
+  const board: Board = { id, projectId, name: name.trim(), order };
   const next: DataState = { ...s, boards: [...s.boards, board], boardColumns: [...s.boardColumns, ...columnsFor(projectId, board.id, p.defaultColumns)] };
   return withActivity(next, projectId, actor.id, at, "board", `Board dibuat: ${board.name}`);
 }

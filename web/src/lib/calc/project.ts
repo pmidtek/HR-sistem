@@ -101,3 +101,34 @@ export function createsCycle(tasks: Pick<Task, "id" | "dependsOn">[], taskId: st
 export function daysLeft(target: string, today: string): number {
   return diffDays(today, target);
 }
+
+export type TaskFilters = {
+  /** "" = semua; "none" = tanpa assignee. */
+  assigneeId: string;
+  priority: string;
+  labelId: string;
+  epicId: string;
+  onlyMine: boolean;
+  query: string;
+};
+
+export const emptyFilters: TaskFilters = { assigneeId: "", priority: "", labelId: "", epicId: "", onlyMine: false, query: "" };
+
+/** Filter task board. `storyEpic` memetakan storyId → epicId. Pencarian pada judul & nomor (#12). */
+export function filterTasks(tasks: Task[], f: TaskFilters, userId: string, storyEpic: Map<string, string>): Task[] {
+  const q = f.query.trim().toLowerCase().replace(/^#/, "");
+  return tasks.filter((t) => {
+    if (f.onlyMine && !t.assigneeIds.includes(userId)) return false;
+    if (f.assigneeId === "none" && t.assigneeIds.length > 0) return false;
+    if (f.assigneeId && f.assigneeId !== "none" && !t.assigneeIds.includes(f.assigneeId)) return false;
+    if (f.priority && t.priority !== f.priority) return false;
+    if (f.labelId && !t.labels.includes(f.labelId)) return false;
+    if (f.epicId && (t.storyId === null || storyEpic.get(t.storyId) !== f.epicId)) return false;
+    if (q && !t.title.toLowerCase().includes(q) && String(t.number) !== q) return false;
+    return true;
+  });
+}
+
+export function activeFilterCount(f: TaskFilters): number {
+  return [f.assigneeId, f.priority, f.labelId, f.epicId].filter(Boolean).length + (f.onlyMine ? 1 : 0);
+}

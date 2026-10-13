@@ -30,11 +30,11 @@ function notifyAssigned(s: DataState, task: Task, newIds: string[], actor: Actor
   return withNotify(s, newIds, actor.id, "Task baru untuk Anda", `${taskRef(task)} ${task.title}`, `/projects/${task.projectId}/board?task=${task.id}`, at);
 }
 
-export function createTask(s: DataState, input: TaskInput, actor: Actor, at: string): DataState {
+/** `id` boleh diberikan dari UI supaya detail task bisa langsung dibuka setelah dibuat. */
+export function createTask(s: DataState, input: TaskInput, actor: Actor, at: string, id: string = newId("task")): DataState {
   assertEdit(s, input.projectId, actor);
   if (!input.title.trim()) throw new ActionError("Judul task wajib diisi.");
   const own = s.tasks.filter((t) => t.projectId === input.projectId);
-  const id = newId("task");
   const inColumn = own.filter((t) => t.columnId === input.columnId);
   const task: Task = {
     description: "", assigneeIds: [], priority: "medium", labels: [], storyId: null, sprintId: null, startDate: null, deadline: null,

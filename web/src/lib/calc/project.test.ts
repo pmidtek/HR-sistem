@@ -6,6 +6,8 @@ import {
   attentionTasks,
   createsCycle,
   doneColumnIds,
+  emptyFilters,
+  filterTasks,
   isOverdue,
   nextNumber,
   progressOf,
@@ -179,5 +181,27 @@ describe("S-curve", () => {
   it("scope creep jika task bertambah > 10%", () => {
     expect(isScopeCreep(30, 33)).toBe(false);
     expect(isScopeCreep(30, 34)).toBe(true);
+  });
+});
+
+describe("filter board", () => {
+  const a = task({ title: "Halaman login", assigneeIds: ["u1"], priority: "high", labels: ["l1"], storyId: "s1" });
+  const b = task({ title: "API invoice", assigneeIds: ["u2"], priority: "low", storyId: "s2" });
+  const c = task({ title: "Tanpa orang" });
+  const storyEpic = new Map([["s1", "e1"], ["s2", "e2"]]);
+  const run = (f: Partial<typeof emptyFilters>) => filterTasks([a, b, c], { ...emptyFilters, ...f }, "u1", storyEpic).map((t) => t.id);
+
+  it("hanya task saya, assignee, tanpa assignee", () => {
+    expect(run({ onlyMine: true })).toEqual([a.id]);
+    expect(run({ assigneeId: "u2" })).toEqual([b.id]);
+    expect(run({ assigneeId: "none" })).toEqual([c.id]);
+  });
+
+  it("prioritas, label, epic, pencarian judul & nomor", () => {
+    expect(run({ priority: "low" })).toEqual([b.id]);
+    expect(run({ labelId: "l1" })).toEqual([a.id]);
+    expect(run({ epicId: "e2" })).toEqual([b.id]);
+    expect(run({ query: "LOGIN" })).toEqual([a.id]);
+    expect(run({ query: `#${b.number}` })).toEqual([b.id]);
   });
 });

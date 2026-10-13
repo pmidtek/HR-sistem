@@ -74,3 +74,17 @@ function spell(n: number): string {
   if (n < 1_000_000_000_000) return `${spell(Math.floor(n / 1_000_000_000))} miliar ${spell(n % 1_000_000_000)}`;
   return `${spell(Math.floor(n / 1_000_000_000_000))} triliun ${spell(n % 1_000_000_000_000)}`;
 }
+
+/** Waktu relatif singkat: "baru saja", "5 mnt lalu", "3 jam lalu", "2 hr lalu", "4 bln lalu", "1 thn lalu". */
+export function formatRelative(iso: string, nowIso: string): string {
+  const sec = Math.max(0, (Date.parse(nowIso) - Date.parse(iso)) / 1000);
+  if (sec < 60) return "baru saja";
+  const min = sec / 60;
+  if (min < 60) return `${Math.floor(min)} mnt lalu`;
+  const hr = min / 60;
+  if (hr < 24) return `${Math.floor(hr)} jam lalu`;
+  const day = hr / 24;
+  if (day < 30) return `${Math.floor(day)} hr lalu`;
+  if (day < 365) return `${Math.floor(day / 30)} bln lalu`;
+  return `${Math.floor(day / 365)} thn lalu`;
+}
