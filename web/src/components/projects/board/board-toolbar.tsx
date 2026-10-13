@@ -55,7 +55,7 @@ export function BoardToolbar({ data, boardId, onBoard, view, onView, filters: f,
             ]} />
           </>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <Tabs variant="pill" value={view} onChange={onView} tabs={[{ value: "kanban", label: "Kanban" }, { value: "list", label: "List" }, { value: "gantt", label: "Gantt" }]} />
           <Button size="small" variant="secondary" tone="neutral" iconLeft={<Icon icon={Layers} size={14} />} onClick={onEpics}>Epic</Button>
           {canEdit && <Button size="small" iconLeft={<Icon icon={Plus} size={14} />} onClick={onNewTask}>Task</Button>}
