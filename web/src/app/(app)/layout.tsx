@@ -46,11 +46,16 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setMobileOpen(true)} />
         <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-8 md:px-8">
-          <PageTransition id={pathname}>
+          <PageTransition id={transitionKey(pathname)}>
             {allowed ? children : <EmptyState title="Akses ditolak" description="Halaman ini tidak tersedia untuk role atau tim Anda." />}
           </PageTransition>
         </main>
       </div>
     </div>
   );
+}
+
+/** Di dalam workspace project, transisi ditangani layout project (hanya area konten yang beranimasi). */
+function transitionKey(pathname: string): string {
+  return pathname.startsWith("/projects/") ? pathname.split("/").slice(0, 3).join("/") : pathname;
 }
