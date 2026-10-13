@@ -7,6 +7,9 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 - **Frontend dikerjakan lebih dulu** (atas permintaan owner, 05 Okt 2026): semua halaman sudah ada di `web/` dengan **data dummy** di memori browser (`web/src/lib/mock/`, `web/src/store/`). Belum ada backend.
 - Logic murni di `web/src/lib/calc/` (lembur, cuti, timesheet, approval, payroll) sudah ber-unit test. Saat backend dibuat, pindahkan/pakai ulang logic ini di Directus Extensions; `web/src/store/actions*.ts` adalah simulasi custom endpoint yang nanti diganti panggilan API.
 - Login nanti pakai **Microsoft kantor (Entra ID)**. Sekarang login demo (pilih akun).
+- **Modul Sales Pipeline ditunda** (13 Okt 2026). Data company/opportunity tetap ada untuk menu Client project; halaman `/sales` diarahkan ke `/projects`.
+- **Project Workspace** (12 menu) mengikuti `docs/PROJECT-WORKSPACE.md` dan sudah selesai di frontend. Hak akses project terpusat di `web/src/lib/projects.ts`.
+- Grafik dibuat sendiri dengan SVG (`web/src/components/charts/`); warna seri memakai token `--chart-1..3` yang sudah divalidasi (CVD & kontras). Markdown memakai `react-markdown`.
 - Desain mengikuti **Cartogram Design System** (token di `web/src/styles/tokens.css`, komponen di `web/src/components/ui/`).
 
 ## Cara kerja

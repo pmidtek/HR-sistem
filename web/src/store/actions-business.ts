@@ -1,6 +1,6 @@
 /** Mutasi untuk sales, project, payroll, dan notifikasi (simulasi endpoint). */
 import type { Actor } from "@/lib/calc/approval";
-import type { PayrollRunStatus, Project, User } from "@/lib/types";
+import type { PayrollRunStatus, User } from "@/lib/types";
 import { ActionError } from "./actions";
 import { newId, nowIso, type DataState } from "./state";
 
@@ -49,10 +49,6 @@ export function markNotificationsRead(s: DataState, userId: string, ids?: string
       n.userId === userId && (!ids || ids.includes(n.id)) ? { ...n, read: true } : n,
     ),
   };
-}
-
-export function setProjectStatus(s: DataState, projectId: string, status: Project["status"]): DataState {
-  return { ...s, projects: s.projects.map((p) => (p.id === projectId ? { ...p, status } : p)) };
 }
 
 type MasterKey = "holidays" | "activityCodes" | "leaveTypes" | "reimbursementCategories" | "teams";

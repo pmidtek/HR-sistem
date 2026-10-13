@@ -20,9 +20,11 @@ import { Tabs } from "@/components/ui/tabs";
 export default function ProjectsPage() {
   const { state, user, today } = useAuthed();
   const { teamName, userName } = useLookups();
-  const [view, setView] = useState<"projects" | "mine">("projects");
+  const [view, setView] = useState<"projects" | "archived" | "mine">("projects");
   const [creating, setCreating] = useState(false);
-  const visible = state.projects.filter((p) => canSeeProject(user, p));
+  const seen = state.projects.filter((p) => canSeeProject(user, p));
+  const archivedCount = seen.filter((p) => p.archived).length;
+  const visible = seen.filter((p) => p.archived === (view === "archived"));
 
   return (
     <>
@@ -33,7 +35,11 @@ export default function ProjectsPage() {
         actions={user.role === "stakeholder" && <Button iconLeft={<Icon icon={Plus} />} onClick={() => setCreating(true)}>Project internal</Button>}
       />
       <div className="mb-6">
-        <Tabs value={view} onChange={setView} tabs={[{ value: "projects", label: "Semua project", count: visible.length }, { value: "mine", label: "Task Saya" }]} />
+        <Tabs value={view} onChange={setView} tabs={[
+          { value: "projects", label: "Semua project", count: seen.length - archivedCount },
+          ...(archivedCount > 0 ? [{ value: "archived" as const, label: "Arsip", count: archivedCount }] : []),
+          { value: "mine", label: "Task Saya" },
+        ]} />
       </div>
 
       {view === "mine" ? <MyTasks /> : visible.length === 0 ? (

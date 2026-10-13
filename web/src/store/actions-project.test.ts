@@ -6,6 +6,8 @@ import { actionItemToTask, publishMom, saveMom } from "./actions-mom";
 import { saveDecision, saveLink } from "./actions-files";
 import { saveCr, transitionCr } from "./actions-changes";
 import { setContactRole } from "./actions-client";
+import { addMember, changeMemberRole, removeMember } from "./actions-team";
+import { deleteProject, saveLabels, updateGeneral } from "./actions-project-settings";
 import { addComment, createTask, moveTask, updateTask } from "./actions-tasks";
 import { initialState } from "./state";
 
@@ -175,5 +177,40 @@ describe("aksi change request & client", () => {
     expect(s.projects.find((p) => p.id === "p3")?.clientContactRoles.ct6).toBe("technical");
     const cleared = setContactRole(s, "p3", "ct6", null, lead, AT);
     expect(cleared.projects.find((p) => p.id === "p3")?.clientContactRoles.ct6).toBeUndefined();
+  });
+});
+
+describe("aksi team & settings", () => {
+  it("tambah anggota memberi notifikasi; tidak bisa dobel", () => {
+    const s = addMember(initialState, "p3", "u7", "member", lead, "2026-10-07", AT);
+    expect(s.projects.find((p) => p.id === "p3")?.memberIds).toContain("u7");
+    expect(s.notifications[0]).toMatchObject({ userId: "u7", title: "Ditambahkan ke project" });
+    expect(() => addMember(s, "p3", "u7", "member", lead, "2026-10-07", AT)).toThrow(/sudah/);
+  });
+
+  it("lead terakhir tidak bisa dikeluarkan/diturunkan; task assignee dilepas saat dikeluarkan", () => {
+    expect(() => removeMember(initialState, "p3", "u4", stakeholder, AT)).toThrow(/Lead/);
+    expect(() => changeMemberRole(initialState, "p3", "u4", "member", stakeholder, AT)).toThrow(/Lead/);
+    const s = removeMember(initialState, "p3", "u8", lead, AT);
+    expect(s.tasks.filter((t) => t.projectId === "p3" && t.assigneeIds.includes("u8"))).toHaveLength(0);
+  });
+
+  it("ganti lead lewat settings: lead lama jadi member", () => {
+    const p = initialState.projects.find((x) => x.id === "p3");
+    if (!p) throw new Error("p3");
+    const s = updateGeneral(initialState, "p3", { ...p, leadId: "u6" }, stakeholder, AT);
+    const np = s.projects.find((x) => x.id === "p3");
+    expect(np?.leadId).toBe("u6");
+    expect(np?.members.find((m) => m.userId === "u4")?.role).toBe("member");
+  });
+
+  it("hapus label melepasnya dari task; hapus project hanya stakeholder", () => {
+    const p = initialState.projects.find((x) => x.id === "p3");
+    const s = saveLabels(initialState, "p3", (p?.labels ?? []).filter((l) => l.name !== "bug"), lead, AT);
+    expect(s.tasks.find((t) => t.id === "p3-t25")?.labels).toEqual([]);
+    expect(() => deleteProject(initialState, "p3", lead)).toThrow(/stakeholder/);
+    const d = deleteProject(initialState, "p3", stakeholder);
+    expect(d.projects.some((x) => x.id === "p3")).toBe(false);
+    expect(d.tasks.some((t) => t.projectId === "p3")).toBe(false);
   });
 });
