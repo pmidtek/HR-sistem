@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif, Space_Grotesk } from "next/font/go
 import "./globals.css";
 import { AppProvider } from "@/store/app-provider";
 import { Toaster } from "@/components/shell/toaster";
+import { MotionProvider } from "@/components/ui/motion";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -33,10 +34,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full">
-        <AppProvider>
-          {children}
-          <Toaster />
-        </AppProvider>
+        <MotionProvider>
+          <AppProvider>
+            {children}
+            <Toaster />
+          </AppProvider>
+        </MotionProvider>
       </body>
     </html>
   );
