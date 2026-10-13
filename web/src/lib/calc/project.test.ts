@@ -8,7 +8,9 @@ import {
   doneColumnIds,
   emptyFilters,
   filterTasks,
+  isDeliverableLate,
   isOverdue,
+  milestoneState,
   nextNumber,
   progressOf,
   refLabel,
@@ -203,5 +205,18 @@ describe("filter board", () => {
     expect(run({ epicId: "e2" })).toEqual([b.id]);
     expect(run({ query: "LOGIN" })).toEqual([a.id]);
     expect(run({ query: `#${b.number}` })).toEqual([b.id]);
+  });
+});
+
+describe("status milestone & deliverable", () => {
+  it("selesai / terlambat / belum", () => {
+    expect(milestoneState({ targetDate: "2026-10-01", completedAt: "2026-10-02T10:00:00Z" }, TODAY)).toBe("done");
+    expect(milestoneState({ targetDate: "2026-10-01", completedAt: null }, TODAY)).toBe("late");
+    expect(milestoneState({ targetDate: TODAY, completedAt: null }, TODAY)).toBe("open");
+  });
+  it("deliverable terlambat hanya jika belum terkirim", () => {
+    expect(isDeliverableLate({ deadline: "2026-10-01", status: "review" }, TODAY)).toBe(true);
+    expect(isDeliverableLate({ deadline: "2026-10-01", status: "sent" }, TODAY)).toBe(false);
+    expect(isDeliverableLate({ deadline: null, status: "draft" }, TODAY)).toBe(false);
   });
 });

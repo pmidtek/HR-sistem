@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addColumn, deleteColumn } from "./actions-boards";
+import { saveDeliverable, saveMilestone, setDeliverableStatus, toggleMilestoneDone } from "./actions-plan";
 import { addComment, createTask, moveTask, updateTask } from "./actions-tasks";
 import { initialState } from "./state";
 
@@ -63,5 +64,26 @@ describe("aksi kolom", () => {
     expect(() => deleteColumn(initialState, "p3-b1-c2", null, lead, AT)).toThrow(/tujuan/);
     const s = deleteColumn(initialState, "p3-b1-c2", "p3-b1-c1", lead, AT);
     expect(s.tasks.find((t) => t.id === "p3-t6")?.columnId).toBe("p3-b1-c1");
+  });
+});
+
+describe("aksi milestone & deliverable", () => {
+  it("member biasa tidak bisa kelola milestone", () => {
+    const input = { name: "M baru", description: "", targetDate: "2026-11-01", taskIds: [] };
+    expect(() => saveMilestone(initialState, "p3", input, { id: "u8", role: "employee" }, AT)).toThrow();
+    expect(saveMilestone(initialState, "p3", input, lead, AT).milestones.some((m) => m.name === "M baru")).toBe(true);
+  });
+
+  it("tandai milestone selesai tercatat sebagai milestone_done", () => {
+    const s = toggleMilestoneDone(initialState, "p3-m3", lead, AT);
+    expect(s.milestones.find((m) => m.id === "p3-m3")?.completedAt).toBe(AT);
+    expect(s.activityLogs[0]).toMatchObject({ kind: "milestone_done" });
+  });
+
+  it("ubah status deliverable masuk activity; link wajib http(s)", () => {
+    const s = setDeliverableStatus(initialState, "p3-d4", "review", lead, AT);
+    expect(s.activityLogs[0]).toMatchObject({ kind: "deliverable_status", text: 'Deliverable "Dokumentasi API publik" → Review' });
+    const d = initialState.deliverables.find((x) => x.id === "p3-d4");
+    expect(() => d && saveDeliverable(initialState, "p3", { ...d, link: "drive.google.com/x" }, lead, AT)).toThrow(/http/);
   });
 });

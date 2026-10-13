@@ -132,3 +132,16 @@ export function filterTasks(tasks: Task[], f: TaskFilters, userId: string, story
 export function activeFilterCount(f: TaskFilters): number {
   return [f.assigneeId, f.priority, f.labelId, f.epicId].filter(Boolean).length + (f.onlyMine ? 1 : 0);
 }
+
+export type MilestoneState = "done" | "late" | "open";
+
+/** Status milestone: selesai jika ditandai; terlambat jika lewat target dan belum selesai. */
+export function milestoneState(m: { targetDate: string; completedAt: string | null }, today: string): MilestoneState {
+  if (m.completedAt) return "done";
+  return m.targetDate < today ? "late" : "open";
+}
+
+/** Deliverable terlambat: lewat deadline dan belum terkirim. */
+export function isDeliverableLate(d: { deadline: string | null; status: string }, today: string): boolean {
+  return d.status !== "sent" && d.deadline !== null && d.deadline < today;
+}
