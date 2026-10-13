@@ -1,11 +1,10 @@
 /** Mutasi untuk sales, project, payroll, dan notifikasi (simulasi endpoint). */
 import type { Actor } from "@/lib/calc/approval";
-import type { Opportunity, OpportunityStage, PayrollRunStatus, Project, Task, User } from "@/lib/types";
-import { STAGES } from "@/lib/mock/sales";
+import type { PayrollRunStatus, Project, Task, User } from "@/lib/types";
 import { ActionError } from "./actions";
 import { newId, nowIso, type DataState } from "./state";
 
-function nextCode(prefix: "OP" | "PR", existing: string[], year: string): string {
+function nextCode(prefix: "PR", existing: string[], year: string): string {
   const yy = year.slice(2);
   const max = existing
     .filter((c) => c.startsWith(`${prefix}${yy}`))
@@ -13,30 +12,7 @@ function nextCode(prefix: "OP" | "PR", existing: string[], year: string): string
   return `${prefix}${yy}${String(max + 1).padStart(4, "0")}`;
 }
 
-export function saveOpportunity(s: DataState, opp: Omit<Opportunity, "id" | "code"> & { id?: string }, today: string): DataState {
-  if (opp.stage === "lost" && !opp.lostReason?.trim()) throw new ActionError("Alasan kalah wajib diisi.");
-  if (opp.id) {
-    return { ...s, opportunities: s.opportunities.map((o) => (o.id === opp.id ? { ...o, ...opp, id: o.id } : o)) };
-  }
-  const code = nextCode("OP", s.opportunities.map((o) => o.code), today.slice(0, 4));
-  return { ...s, opportunities: [{ ...opp, id: newId("o"), code }, ...s.opportunities] };
-}
-
-export function moveOpportunity(s: DataState, id: string, stage: OpportunityStage, lostReason?: string): DataState {
-  if (stage === "lost" && !lostReason?.trim()) throw new ActionError("Alasan kalah wajib diisi.");
-  const probability = STAGES.find((x) => x.id === stage)?.probability ?? 0;
-  return {
-    ...s,
-    opportunities: s.opportunities.map((o) =>
-      o.id === id ? { ...o, stage, probability, lostReason: stage === "lost" ? (lostReason ?? null) : null } : o,
-    ),
-  };
-}
-
 export function createProject(s: DataState, input: Omit<Project, "id" | "code" | "status">, today: string): DataState {
-  if (input.opportunityId && s.projects.some((p) => p.opportunityId === input.opportunityId)) {
-    throw new ActionError("Opportunity ini sudah punya project.");
-  }
   const id = newId("p");
   const code = nextCode("PR", s.projects.map((p) => p.code), today.slice(0, 4));
   const project: Project = { ...input, id, code, status: "not_started" };

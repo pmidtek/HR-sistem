@@ -17,9 +17,6 @@ export function projectRefs(s: DataState): ProjectRef[] {
     ...s.projects
       .filter((p) => p.status !== "done" && p.status !== "cancelled")
       .map((p) => ({ code: p.code, name: p.name, kind: "project" as const })),
-    ...s.opportunities
-      .filter((o) => o.stage !== "lost")
-      .map((o) => ({ code: o.code, name: o.name, kind: "opportunity" as const })),
   ];
 }
 

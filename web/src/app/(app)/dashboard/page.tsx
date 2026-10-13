@@ -2,7 +2,7 @@
 
 import { formatDate } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
-import { ActionSection, FinanceSection, PeopleSection, ProjectSalesSection } from "@/components/dashboard/sections";
+import { ActionSection, FinanceSection, PeopleSection, ProjectSection } from "@/components/dashboard/sections";
 import { MySection } from "@/components/dashboard/my-section";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { CountUpScope } from "@/components/ui/motion";
@@ -26,8 +26,8 @@ export default function DashboardPage() {
 
         {role === "stakeholder" && (
           <div>
-            <SectionTitle>Project & sales</SectionTitle>
-            <ProjectSalesSection />
+            <SectionTitle>Project</SectionTitle>
+            <ProjectSection />
           </div>
         )}
 

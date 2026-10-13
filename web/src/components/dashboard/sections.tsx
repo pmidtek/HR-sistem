@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { addDays, eachDay, startOfWeek } from "@/lib/calc/dates";
 import { formatDate, formatDuration, formatPeriod, formatRupiah } from "@/lib/format";
-import { STAGES } from "@/lib/mock/sales";
 import { isLate, isNearlyDone, projectProgress } from "@/lib/projects";
 import { useAuthed } from "@/store/app-provider";
 import { daySummaries, useLookups } from "../hooks";
@@ -26,18 +25,13 @@ export function ActionSection() {
   );
 }
 
-export function ProjectSalesSection() {
+export function ProjectSection() {
   const { state, today } = useAuthed();
   const { teamName } = useLookups();
   const active = state.projects.filter((p) => p.status === "ongoing" || p.status === "review" || p.status === "not_started");
   const prog = (id: string) => projectProgress(id, state.tasks, state.boardColumns);
   const late = state.projects.filter((p) => isLate(p, today));
   const nearly = active.filter((p) => isNearlyDone(p, prog(p.id), today));
-  const open = state.opportunities.filter((o) => o.stage !== "won" && o.stage !== "lost");
-  const closed = state.opportunities.filter((o) => o.stage === "won" || o.stage === "lost");
-  const winRate = closed.length ? Math.round((closed.filter((o) => o.stage === "won").length / closed.length) * 100) : 0;
-  const closingThisMonth = open.filter((o) => o.expectedClose.startsWith(today.slice(0, 7)));
-  const ready = state.opportunities.filter((o) => o.stage === "won" && !state.projects.some((p) => p.opportunityId === o.id));
   const projectItem = (p: (typeof active)[number]) => ({
     key: p.id,
     left: <Link href={`/projects/${p.id}`} className="hover:text-fg-brand"><span className="font-mono text-xs text-fg-brand">{p.code}</span> {p.name}</Link>,
@@ -45,20 +39,12 @@ export function ProjectSalesSection() {
   });
 
   return (
-    <Stagger as="section" delay={0.06} className="grid gap-4 lg:grid-cols-3">
+    <Stagger as="section" delay={0.06} className="grid gap-4 lg:grid-cols-2">
       <Panel title="Project ongoing" aside={<Badge>{active.length}</Badge>}>
         <MiniList items={active.map((p) => ({ ...projectItem(p), right: `${p.teamIds.map(teamName).join(", ")} · ${prog(p.id)}%` }))} empty="Tidak ada project aktif." />
       </Panel>
       <Panel title="Mau selesai & terlambat">
         <MiniList items={[...late.map((p) => ({ ...projectItem(p), right: <Badge tone="danger">Terlambat</Badge> })), ...nearly.map(projectItem)]} empty="Tidak ada." />
-      </Panel>
-      <Panel title="Pipeline per tahap" aside={<span className="font-mono text-xs text-fg-muted">Win rate {winRate}%</span>}>
-        <BarList format={formatRupiah} rows={STAGES.filter((s) => s.id !== "won" && s.id !== "lost").map((s) => ({ label: s.name, value: open.filter((o) => o.stage === s.id).reduce((a, o) => a + o.value, 0) }))} />
-        <div className="border-t border-line pt-3">
-          <p className="mb-1 text-xs text-fg-muted">Perkiraan closing bulan ini</p>
-          <MiniList items={closingThisMonth.map((o) => ({ key: o.id, left: o.name, right: formatRupiah(o.value) }))} empty="Tidak ada." />
-        </div>
-        {ready.length > 0 && <Link href="/sales" className="text-xs text-fg-brand hover:underline">{ready.length} opportunity Won siap dijadikan project</Link>}
       </Panel>
     </Stagger>
   );

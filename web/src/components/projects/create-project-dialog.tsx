@@ -3,7 +3,6 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import type { Opportunity } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
 import { createProject } from "@/store/actions-business";
 import { useLookups } from "../hooks";
@@ -14,11 +13,12 @@ import { Avatar } from "../ui/display";
 import { Field, Input } from "../ui/form";
 import { Icon } from "../ui/icon";
 
-/** Konversi manual Opportunity Won → Project. Kode PRYYXXXX otomatis. */
-export function CreateProjectDialog({ opportunity, onClose }: { opportunity: Opportunity | null; onClose: () => void }) {
+/** Buat project baru. Kode PRYYXXXX otomatis. Klien opsional (kosong = project internal). */
+export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
   const { state, today, run } = useAuthed();
   const { userOptions, userName } = useLookups();
-  const [name, setName] = useState(opportunity?.name ?? "");
+  const [name, setName] = useState("");
+  const [companyId, setCompanyId] = useState("");
   const [teamIds, setTeamIds] = useState<string[]>([]);
   const [leadId, setLeadId] = useState("");
   const [members, setMembers] = useState<string[]>([]);
@@ -31,7 +31,7 @@ export function CreateProjectDialog({ opportunity, onClose }: { opportunity: Opp
     if (!valid) return;
     const memberIds = [...new Set([leadId, ...members])];
     const ok = run(
-      (s) => createProject(s, { name, opportunityId: opportunity?.id ?? null, teamIds, leadId, memberIds, startDate: start, targetDate: target }, today),
+      (s) => createProject(s, { name, opportunityId: null, companyId: companyId || null, teamIds, leadId, memberIds, startDate: start, targetDate: target }, today),
       "Project dibuat dan kodenya siap dipakai di timesheet.",
     );
     if (ok) onClose();
@@ -42,7 +42,7 @@ export function CreateProjectDialog({ opportunity, onClose }: { opportunity: Opp
       open
       onOpenChange={(o) => !o && onClose()}
       title="Buat project"
-      description={opportunity ? `Dari ${opportunity.code} — ${opportunity.name}` : "Project internal tanpa opportunity."}
+      description="Kode PRYYXXXX dibuat otomatis dan langsung bisa dipakai di timesheet."
       footer={
         <>
           <Button variant="secondary" tone="neutral" onClick={onClose}>Batal</Button>
@@ -52,6 +52,13 @@ export function CreateProjectDialog({ opportunity, onClose }: { opportunity: Opp
     >
       <div className="flex flex-col gap-4">
         <Input label="Nama project" value={name} onChange={(e) => setName(e.target.value)} />
+        <Combobox
+          label="Klien (opsional)"
+          value={companyId}
+          onChange={setCompanyId}
+          options={[{ value: "", label: "Internal (tanpa klien)" }, ...state.companies.map((c) => ({ value: c.id, label: c.name, hint: c.industry }))]}
+          placeholder="Internal (tanpa klien)"
+        />
         <Field label="Tim pelaksana (bisa lebih dari satu)" id="teams">
           <div className="flex flex-wrap gap-2">
             {delivery.map((t) => {

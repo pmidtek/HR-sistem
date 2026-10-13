@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/format";
 import { canSeeProject, isLate, projectProgress } from "@/lib/projects";
 import { useAuthed } from "@/store/app-provider";
 import { useLookups } from "@/components/hooks";
-import { CreateProjectDialog } from "@/components/sales/create-project-dialog";
+import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProjectBadge } from "@/components/status-badge";
 import { MyTasks } from "@/components/projects/my-tasks";
@@ -78,7 +78,7 @@ export default function ProjectsPage() {
           })}
         </div>
       )}
-      {creating && <CreateProjectDialog opportunity={null} onClose={() => setCreating(false)} />}
+      {creating && <CreateProjectDialog onClose={() => setCreating(false)} />}
     </>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  BriefcaseBusiness,
   CalendarDays,
   CheckCheck,
   Clock,
@@ -26,7 +25,6 @@ export type Feature =
   | "approvals"
   | "timesheet_recap"
   | "payroll"
-  | "sales"
   | "projects"
   | "employees"
   | "settings";
@@ -56,16 +54,14 @@ export function canAccess(user: User, team: Team | null, feature: Feature): bool
       return r !== "employee";
     case "payroll":
       return r === "finance" || r === "stakeholder";
-    case "sales":
-      return r === "stakeholder" || r === "hr" || team?.kind === "sales";
     case "projects":
-      return r === "stakeholder" || r === "hr" || team?.kind === "delivery";
+      // Semua pegawai; daftar project difilter per keanggotaan (lib/projects.ts).
+      return true;
   }
 }
 
 /** Boleh edit (bukan hanya lihat)? */
 export function canEdit(user: User, team: Team | null, feature: Feature): boolean {
-  if (feature === "sales") return team?.kind === "sales" || user.role === "stakeholder";
   if (feature === "employees") return user.role === "hr";
   return canAccess(user, team, feature);
 }
@@ -91,7 +87,6 @@ export const navGroups: NavGroup[] = [
   {
     label: "Bisnis",
     items: [
-      { feature: "sales", href: "/sales", label: "Sales Pipeline", icon: BriefcaseBusiness },
       { feature: "projects", href: "/projects", label: "Project", icon: FolderKanban },
     ],
   },

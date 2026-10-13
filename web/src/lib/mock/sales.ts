@@ -29,10 +29,10 @@ export const opportunities: Opportunity[] = [
 ];
 
 export const projects: Project[] = [
-  { id: "p3", code: "PR260003", name: "Portal Pembayaran B2B", opportunityId: "o5", teamIds: ["t-eng", "t-prod"], leadId: "u4", memberIds: ["u4", "u8", "u6"], startDate: "2026-07-01", targetDate: "2026-10-15", status: "ongoing" },
-  { id: "p4", code: "PR260004", name: "Data Warehouse Retail", opportunityId: "o7", teamIds: ["t-data"], leadId: "u7", memberIds: ["u7"], startDate: "2026-05-20", targetDate: "2026-09-30", status: "ongoing" },
-  { id: "p5", code: "PR260005", name: "Dashboard Klien Sinar", opportunityId: null, teamIds: ["t-eng", "t-prod"], leadId: "u6", memberIds: ["u6", "u8"], startDate: "2026-08-15", targetDate: "2026-12-15", status: "ongoing" },
-  { id: "p2", code: "PR260002", name: "Website Company Profile", opportunityId: null, teamIds: ["t-eng"], leadId: "u8", memberIds: ["u8"], startDate: "2026-02-01", targetDate: "2026-04-30", status: "done" },
+  { id: "p3", code: "PR260003", name: "Portal Pembayaran B2B", opportunityId: "o5", companyId: "c2", teamIds: ["t-eng", "t-prod"], leadId: "u4", memberIds: ["u4", "u8", "u6"], startDate: "2026-07-01", targetDate: "2026-10-15", status: "ongoing" },
+  { id: "p4", code: "PR260004", name: "Data Warehouse Retail", opportunityId: "o7", companyId: "c1", teamIds: ["t-data"], leadId: "u7", memberIds: ["u7"], startDate: "2026-05-20", targetDate: "2026-09-30", status: "ongoing" },
+  { id: "p5", code: "PR260005", name: "Dashboard Klien Sinar", opportunityId: null, companyId: "c2", teamIds: ["t-eng", "t-prod"], leadId: "u6", memberIds: ["u6", "u8"], startDate: "2026-08-15", targetDate: "2026-12-15", status: "ongoing" },
+  { id: "p2", code: "PR260002", name: "Website Company Profile", opportunityId: null, companyId: null, teamIds: ["t-eng"], leadId: "u8", memberIds: ["u8"], startDate: "2026-02-01", targetDate: "2026-04-30", status: "done" },
 ];
 
 const defaultColumns = ["Backlog", "To Do", "In Progress", "Review", "Done"];

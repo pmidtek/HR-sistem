@@ -17,7 +17,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "HRIS Internal",
-  description: "Timesheet, cuti, lembur, reimburse, payroll, sales, dan project.",
+  description: "Timesheet, cuti, lembur, reimburse, payroll, dan project.",
 };
 
 // Terapkan theme tersimpan sebelum render untuk menghindari kedipan.

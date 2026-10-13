@@ -168,6 +168,8 @@ export type Project = {
   code: string;
   name: string;
   opportunityId: string | null;
+  /** Klien (company) project; null = project internal. */
+  companyId: string | null;
   teamIds: string[];
   leadId: string;
   memberIds: string[];
