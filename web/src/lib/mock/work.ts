@@ -4,8 +4,6 @@ import type {
   LeaveRequest,
   LeaveType,
   OvertimeRequest,
-  Reimbursement,
-  ReimbursementCategory,
   TimesheetEntry,
 } from "../types";
 import { users } from "./people";
@@ -29,12 +27,6 @@ export const leaveBalances: LeaveBalance[] = users.map((u) => ({
   used: usedAnnual[u.id] ?? 0,
 }));
 
-export const reimbursementCategories: ReimbursementCategory[] = [
-  { id: "transport", name: "Transport" },
-  { id: "meal", name: "Makan/Meeting" },
-  { id: "hotel", name: "Hotel" },
-  { id: "ops", name: "Operasional" },
-];
 
 /** Pola harian per user: [projectCode, activityId, start, end, description][] */
 type Block = [string, string, string, string, string];
@@ -124,12 +116,4 @@ export const overtimeRequests: OvertimeRequest[] = [
   { id: "ot1", userId: "u4", date: "2026-09-29", isHoliday: false, requestedMinutes: 150, approvedMinutes: 150, reason: "Hotfix produksi", status: "approved", logs: [log("2026-09-30T09:00:00+07:00", "u4", null, "pending_hr"), log("2026-09-30T13:00:00+07:00", "u2", "pending_hr", "pending_stakeholder"), log("2026-10-01T08:00:00+07:00", "u1", "pending_stakeholder", "approved")] },
   { id: "ot2", userId: "u4", date: "2026-10-01", isHoliday: false, requestedMinutes: 120, approvedMinutes: null, reason: "Persiapan rilis", status: "pending_stakeholder", logs: [log("2026-10-02T09:00:00+07:00", "u4", null, "pending_hr"), log("2026-10-02T15:00:00+07:00", "u2", "pending_hr", "pending_stakeholder")] },
   { id: "ot3", userId: "u7", date: "2026-09-30", isHoliday: false, requestedMinutes: 120, approvedMinutes: null, reason: "Deadline laporan kuartal", status: "pending_hr", logs: [log("2026-10-01T09:00:00+07:00", "u7", null, "pending_hr")] },
-];
-
-export const reimbursements: Reimbursement[] = [
-  { id: "rb1", userId: "u5", date: "2026-09-30", categoryId: "transport", projectCode: "OP260012", amount: 185_000, description: "Grab ke kantor PT Maju Bersama (PP)", files: ["struk-grab.jpg"], status: "pending_finance", paidAt: null, logs: [log("2026-09-30T18:00:00+07:00", "u5", null, "pending_finance")] },
-  { id: "rb2", userId: "u5", date: "2026-09-25", categoryId: "meal", projectCode: "OP260015", amount: 640_000, description: "Makan siang meeting dengan klien (4 orang)", files: ["nota-resto.jpg"], status: "pending_stakeholder", paidAt: null, logs: [log("2026-09-25T20:00:00+07:00", "u5", null, "pending_finance"), log("2026-09-26T10:00:00+07:00", "u3", "pending_finance", "pending_stakeholder")] },
-  { id: "rb3", userId: "u4", date: "2026-09-20", categoryId: "ops", projectCode: "PR260003", amount: 350_000, description: "Langganan tools monitoring 1 bulan", files: ["invoice.pdf"], status: "approved", paidAt: null, logs: [log("2026-09-20T12:00:00+07:00", "u4", null, "pending_finance"), log("2026-09-21T09:00:00+07:00", "u3", "pending_finance", "pending_stakeholder"), log("2026-09-22T09:00:00+07:00", "u1", "pending_stakeholder", "approved")] },
-  { id: "rb4", userId: "u6", date: "2026-09-15", categoryId: "hotel", projectCode: "PR260005", amount: 1_250_000, description: "Hotel 1 malam workshop klien Bandung", files: ["hotel.pdf", "kwitansi.jpg"], status: "paid", paidAt: "2026-09-25", logs: [] },
-  { id: "rb5", userId: "u7", date: "2026-09-28", categoryId: "transport", projectCode: "INTERNAL", amount: 75_000, description: "Parkir dan tol", files: ["struk.jpg"], status: "revision", paidAt: null, logs: [log("2026-09-28T18:00:00+07:00", "u7", null, "pending_finance"), log("2026-09-29T10:00:00+07:00", "u3", "pending_finance", "revision", "Foto struk tol buram, mohon upload ulang.")] },
 ];

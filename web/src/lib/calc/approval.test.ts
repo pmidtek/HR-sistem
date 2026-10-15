@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowedLeaveActions, allowedReimburseActions } from "./approval";
+import { allowedLeaveActions, allowedReimburseActions, canReviewReimburseItems } from "./approval";
 
 const hr = { id: "hr1", role: "hr" as const };
 const sh = { id: "sh1", role: "stakeholder" as const };
@@ -47,5 +47,14 @@ describe("approval reimburse", () => {
 
   it("Finance tandai dibayar setelah disetujui", () => {
     expect(allowedReimburseActions(fin, "e1", "approved")).toEqual(["mark_paid"]);
+    expect(allowedReimburseActions(fin, "fin1", "approved")).toEqual([]);
+  });
+
+  it("tolak per baris hanya oleh peninjau di tahapnya", () => {
+    expect(canReviewReimburseItems(fin, "e1", "pending_finance")).toBe(true);
+    expect(canReviewReimburseItems(sh, "e1", "pending_finance")).toBe(false);
+    expect(canReviewReimburseItems(sh, "e1", "pending_stakeholder")).toBe(true);
+    expect(canReviewReimburseItems(fin, "fin1", "pending_finance")).toBe(false);
+    expect(canReviewReimburseItems(fin, "e1", "approved")).toBe(false);
   });
 });

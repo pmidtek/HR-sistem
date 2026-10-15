@@ -26,6 +26,8 @@ export type PayrollSettings = {
   periodMode: PayrollPeriodMode;
   cutoffDay: number;
   reimburseViaPayroll: boolean;
+  /** Kurs USD → Rupiah untuk mengisi otomatis kolom Rupiah di form reimburse. */
+  usdRate: number;
   payslipPasswordProtected: boolean;
 };
 

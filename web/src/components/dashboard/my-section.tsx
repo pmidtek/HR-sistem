@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { addDays, eachDay, startOfWeek } from "@/lib/calc/dates";
 import { formatDayShort, formatDuration, formatPeriod, formatRupiah } from "@/lib/format";
+import { claimTotal } from "@/lib/calc/reimburse";
 import { useAuthed } from "@/store/app-provider";
 import { daySummaries, useLookups } from "../hooks";
 import { slipTotals } from "../payroll/run-table";
@@ -10,6 +11,7 @@ import { MyTasks } from "../projects/my-tasks";
 import { ApprovalBadge, ReimburseBadge } from "../status-badge";
 import { Card, Stat } from "../ui/display";
 import { CountUp, Stagger, StaggerItem } from "../ui/motion";
+import { ReimburseMineCard } from "./reimburse-section";
 import { MiniList, Panel } from "./widgets";
 
 /** Ringkasan pribadi: dipakai semua role (pegawai melihat ini sebagai dashboard utama). */
@@ -25,7 +27,7 @@ export function MySection({ showTasks, delay = 0 }: { showTasks: boolean; delay?
   const pending = [
     ...state.leaveRequests.filter((r) => r.userId === user.id && r.status.startsWith("pending")).map((r) => ({ key: r.id, left: `Cuti ${formatDayShort(r.startDate)}`, right: <ApprovalBadge status={r.status} /> })),
     ...state.overtimeRequests.filter((r) => r.userId === user.id && r.status.startsWith("pending")).map((r) => ({ key: r.id, left: `Lembur ${formatDayShort(r.date)}`, right: <ApprovalBadge status={r.status} /> })),
-    ...state.reimbursements.filter((r) => r.userId === user.id && !["paid", "rejected"].includes(r.status)).map((r) => ({ key: r.id, left: `Reimburse ${formatRupiah(r.amount)}`, right: <ReimburseBadge status={r.status} /> })),
+    ...state.reimbursements.filter((r) => r.userId === user.id && !["paid", "rejected"].includes(r.status)).map((r) => ({ key: r.id, left: `${r.number} · ${formatRupiah(claimTotal(r))}`, right: <ReimburseBadge status={r.status} /> })),
   ];
 
   return (
@@ -39,6 +41,7 @@ export function MySection({ showTasks, delay = 0 }: { showTasks: boolean; delay?
         </Card>
       </StaggerItem>
       <div className="grid gap-4 lg:grid-cols-2">
+        <ReimburseMineCard />
         <Panel title="Status pengajuan saya">
           <MiniList items={pending} empty="Tidak ada pengajuan yang sedang berjalan." />
         </Panel>

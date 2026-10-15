@@ -1,6 +1,7 @@
 /** Generate & ubah draf payroll (simulasi endpoint Finance). */
 import type { Actor } from "@/lib/calc/approval";
 import { eachDay, isWeekend } from "@/lib/calc/dates";
+import { claimTotal } from "@/lib/calc/reimburse";
 import { computePayslip, payrollPeriod, type PayrollInput } from "@/lib/calc/payroll";
 import { baseInput, salaryProfiles, slipNumber } from "@/lib/mock/payroll";
 import type { Payslip } from "@/lib/types";
@@ -34,7 +35,7 @@ export function generatePayroll(s: DataState, period: string, actor: Actor): Dat
           .filter((r) => r.userId === u.id && r.status === "approved" && inPeriod(r.date))
           .map((r) => ({ date: r.date, minutes: r.approvedMinutes ?? r.requestedMinutes, isHoliday: r.isHoliday })),
         reimburse: payroll.reimburseViaPayroll
-          ? s.reimbursements.filter((r) => r.userId === u.id && r.status === "approved").reduce((sum, r) => sum + r.amount, 0)
+          ? s.reimbursements.filter((r) => r.userId === u.id && r.status === "approved").reduce((sum, r) => sum + claimTotal(r), 0)
           : 0,
         unpaidLeaveDays,
         // Pertahankan input manual Finance saat generate ulang.

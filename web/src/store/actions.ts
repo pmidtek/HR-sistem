@@ -4,29 +4,25 @@
  */
 import {
   allowedLeaveActions,
-  allowedReimburseActions,
   leaveStatusLabel,
   leaveTransitions,
-  reimburseStatusLabel,
-  reimburseTransitions,
   type Actor,
   type LeaveAction,
-  type ReimburseAction,
 } from "@/lib/calc/approval";
-import type { ApprovalLog, LeaveRequest, Notification, OvertimeRequest, Reimbursement, TimesheetEntry } from "@/lib/types";
+import type { ApprovalLog, LeaveRequest, Notification, OvertimeRequest, TimesheetEntry } from "@/lib/types";
 import { newId, nowIso, type DataState } from "./state";
 
 export class ActionError extends Error {}
 
-function notify(state: DataState, userIds: string[], title: string, body: string, href: string): Notification[] {
+export function notify(state: DataState, userIds: string[], title: string, body: string, href: string): Notification[] {
   const created = [...new Set(userIds)].map((userId) => ({
     id: newId("n"), userId, title, body, href, createdAt: nowIso(), read: false,
   }));
   return [...created, ...state.notifications];
 }
 
-const idsByRole = (s: DataState, role: Actor["role"]) => s.users.filter((u) => u.role === role).map((u) => u.id);
-const nameOf = (s: DataState, id: string) => s.users.find((u) => u.id === id)?.name ?? "-";
+export const idsByRole = (s: DataState, role: Actor["role"]) => s.users.filter((u) => u.role === role).map((u) => u.id);
+export const nameOf = (s: DataState, id: string) => s.users.find((u) => u.id === id)?.name ?? "-";
 
 export function saveTimesheetEntry(s: DataState, entry: TimesheetEntry): DataState {
   const existing = s.timesheet.find((e) => e.id === entry.id);
@@ -121,37 +117,5 @@ export function actOnOvertime(
     ...s, timesheet,
     overtimeRequests: s.overtimeRequests.map((r) => (r.id === id ? updated : r)),
     notifications: notify(s, recipients.filter((r) => r !== actor.id), `Lembur: ${leaveStatusLabel[to]}`, `Lembur ${nameOf(s, req.userId)} kini berstatus "${leaveStatusLabel[to]}".`, action === "forward" ? "/approvals" : "/overtime"),
-  };
-}
-
-export function submitReimburse(s: DataState, req: Omit<Reimbursement, "id" | "status" | "logs" | "paidAt">): DataState {
-  const created: Reimbursement = {
-    ...req, id: newId("rb"), status: "pending_finance", paidAt: null,
-    logs: [{ at: nowIso(), byUserId: req.userId, from: null, to: "pending_finance" }],
-  };
-  return {
-    ...s,
-    reimbursements: [created, ...s.reimbursements],
-    notifications: notify(s, idsByRole(s, "finance").filter((id) => id !== req.userId), "Reimburse baru", `${nameOf(s, req.userId)} mengajukan reimburse.`, "/approvals"),
-  };
-}
-
-export function actOnReimburse(s: DataState, id: string, action: ReimburseAction, actor: Actor, today: string, note?: string): DataState {
-  const req = s.reimbursements.find((r) => r.id === id);
-  if (!req) throw new ActionError("Reimburse tidak ditemukan.");
-  if (!allowedReimburseActions(actor, req.userId, req.status).includes(action)) throw new ActionError("Anda tidak berhak melakukan aksi ini.");
-  if ((action === "revision" || action === "reject") && !note?.trim()) throw new ActionError("Alasan wajib diisi.");
-  const to = reimburseTransitions[action].to;
-  const updated: Reimbursement = {
-    ...req, status: to, paidAt: to === "paid" ? today : req.paidAt,
-    logs: [...req.logs, { at: nowIso(), byUserId: actor.id, from: req.status, to, note }],
-  };
-  const recipients = action === "forward" ? [...idsByRole(s, "stakeholder"), req.userId]
-    : action === "resubmit" ? idsByRole(s, "finance")
-    : req.status === "pending_stakeholder" ? [req.userId, ...idsByRole(s, "finance")] : [req.userId];
-  return {
-    ...s,
-    reimbursements: s.reimbursements.map((r) => (r.id === id ? updated : r)),
-    notifications: notify(s, recipients.filter((r) => r !== actor.id), `Reimburse: ${reimburseStatusLabel[to]}`, `Reimburse ${nameOf(s, req.userId)} kini berstatus "${reimburseStatusLabel[to]}".${note ? ` Catatan: ${note}` : ""}`, action === "forward" ? "/approvals" : "/reimbursements"),
   };
 }

@@ -27,10 +27,9 @@ import {
   leaveRequests,
   leaveTypes,
   overtimeRequests,
-  reimbursementCategories,
-  reimbursements,
   timesheetEntries,
 } from "@/lib/mock/work";
+import { reimbursementCategories, reimbursements } from "@/lib/mock/reimburse";
 import { companies, opportunities } from "@/lib/mock/sales";
 import { boardColumns, boards, epics, projects, sprints, stories } from "@/lib/mock/projects/base";
 import { tasks } from "@/lib/mock/projects/tasks";

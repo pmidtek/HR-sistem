@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { addDays, eachDay, startOfWeek } from "@/lib/calc/dates";
 import { formatDate, formatDuration, formatPeriod, formatRupiah } from "@/lib/format";
+import { sumItemsBy } from "@/lib/calc/reimburse";
 import { isLate, isNearlyDone, projectProgress } from "@/lib/projects";
 import { useAuthed } from "@/store/app-provider";
 import { daySummaries, useLookups } from "../hooks";
@@ -89,9 +90,9 @@ export function PeopleSection() {
 
 export function FinanceSection() {
   const { state, today } = useAuthed();
-  const thisMonth = state.reimbursements.filter((r) => r.date >= addDays(today, -30));
-  const byCat = state.reimbursementCategories.map((c) => ({ label: c.name, value: thisMonth.filter((r) => r.categoryId === c.id && r.status !== "rejected").reduce((s, r) => s + r.amount, 0) }));
-  const byProject = Object.entries(thisMonth.filter((r) => r.status !== "rejected").reduce<Record<string, number>>((a, r) => ({ ...a, [r.projectCode]: (a[r.projectCode] ?? 0) + r.amount }), {})).map(([label, value]) => ({ label, value }));
+  const recent = state.reimbursements.filter((r) => r.submittedAt >= addDays(today, -30));
+  const byCat = [...sumItemsBy(recent, (i) => i.categoryId).entries()].map(([id, t]) => ({ label: state.reimbursementCategories.find((c) => c.id === id)?.name ?? id, value: t.amount })).sort((a, b) => b.value - a.value);
+  const byProject = [...sumItemsBy(recent, (i) => i.projectCode ?? "Tanpa kode").entries()].map(([label, t]) => ({ label: label === "OTHERS" ? "Others" : label, value: t.amount })).sort((a, b) => b.value - a.value);
   const runs = [...state.payrollRuns].sort((a, b) => b.period.localeCompare(a.period));
   const total = (runId?: string) => state.payslips.filter((p) => p.runId === runId).reduce((s, p) => s + slipTotals(p).thp, 0);
   const [cur, prev] = runs;

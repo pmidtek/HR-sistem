@@ -1,21 +1,21 @@
 "use client";
 
-import { FileImage } from "lucide-react";
 import {
   allowedLeaveActions,
   allowedReimburseActions,
   leaveStatusLabel,
-  reimburseStatusLabel,
   type LeaveAction,
-  type ReimburseAction,
 } from "@/lib/calc/approval";
-import { formatDate, formatDayShort, formatDuration, formatRupiah } from "@/lib/format";
+import { formatDate, formatDayShort, formatDuration } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
-import { actOnLeave, actOnOvertime, actOnReimburse } from "@/store/actions";
-import { ApprovalBadge, ReimburseBadge } from "../status-badge";
+import { actOnLeave, actOnOvertime } from "@/store/actions";
+import { useState } from "react";
+import { ClaimDetail } from "../reimburse/claim-detail";
+import { ClaimTable } from "../reimburse/claim-table";
+import { PayDialog } from "../reimburse/pay-dialog";
+import { ApprovalBadge } from "../status-badge";
 import { Button } from "../ui/button";
 import { EmptyState } from "../ui/display";
-import { Icon } from "../ui/icon";
 import type { Decision } from "./decision-dialog";
 import { RequestCard } from "./request-card";
 import { Stagger } from "../ui/motion";
@@ -26,14 +26,6 @@ const leaveButtons: Record<Exclude<LeaveAction, "cancel">, { label: string; tone
   forward: { label: "Teruskan ke Stakeholder", tone: "brand", variant: "primary", noteRequired: false },
   approve: { label: "Setujui", tone: "brand", variant: "primary", noteRequired: false },
   reject: { label: "Tolak", tone: "danger", variant: "secondary", noteRequired: true },
-};
-
-const reimburseButtons: Partial<Record<ReimburseAction, { label: string; tone: "brand" | "danger"; variant: "primary" | "secondary"; noteRequired: boolean }>> = {
-  forward: { label: "Teruskan ke Stakeholder", tone: "brand", variant: "primary", noteRequired: false },
-  approve: { label: "Setujui", tone: "brand", variant: "primary", noteRequired: false },
-  revision: { label: "Minta revisi", tone: "danger", variant: "secondary", noteRequired: true },
-  reject: { label: "Tolak", tone: "danger", variant: "secondary", noteRequired: true },
-  mark_paid: { label: "Tandai sudah dibayar", tone: "brand", variant: "secondary", noteRequired: false },
 };
 
 const grid = "grid gap-3 lg:grid-cols-2";
@@ -121,52 +113,23 @@ export function OvertimeQueue({ onlyPending, onDecide }: QueueProps) {
   );
 }
 
-export function ReimburseQueue({ onlyPending, onDecide }: QueueProps) {
-  const { state, actor, today, run } = useAuthed();
-  const categoryName = (id: string) => state.reimbursementCategories.find((c) => c.id === id)?.name ?? id;
+/** Reimburse: satu baris per pengajuan; detail & keputusan (termasuk tolak per baris) di panel samping. */
+export function ReimburseQueue({ onlyPending }: QueueProps) {
+  const { state, actor } = useAuthed();
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [paying, setPaying] = useState<string[] | null>(null);
   const rows = state.reimbursements
-    .map((r) => ({ r, acts: allowedReimburseActions(actor, r.userId, r.status).filter((a) => a !== "resubmit") }))
-    .filter(({ acts }) => !onlyPending || acts.length > 0);
-  if (rows.length === 0) return <EmptyState title="Tidak ada reimburse" description="Semua sudah diproses." />;
+    .filter((r) => {
+      const acts = allowedReimburseActions(actor, r.userId, r.status).filter((a) => a !== "resubmit" && a !== "mark_paid");
+      return onlyPending ? acts.length > 0 : r.userId !== actor.id;
+    })
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  const open = openId ? state.reimbursements.find((r) => r.id === openId) : undefined;
   return (
-    <Stagger className={grid}>
-      {rows.map(({ r, acts }, i) => (
-        <RequestCard
-          index={i}
-          key={r.id}
-          userId={r.userId}
-          kind={`${categoryName(r.categoryId)} · ${r.projectCode}`}
-          badge={<ReimburseBadge status={r.status} />}
-          headline={<span className="font-serif text-2xl font-normal">{formatRupiah(r.amount)}</span>}
-          detail={
-            <>
-              {formatDate(r.date)} · {r.description}
-              <span className="mt-2 flex flex-wrap gap-1.5">
-                {r.files.map((f) => (
-                  <button key={f} type="button" className="inline-flex items-center gap-1.5 rounded-xxs bg-sunken px-2 py-1 text-xs text-fg-brand hover:underline">
-                    <Icon icon={FileImage} size={12} /> {f}
-                  </button>
-                ))}
-              </span>
-            </>
-          }
-          logs={r.logs}
-          labels={reimburseStatusLabel}
-          actions={acts.length > 0 && acts.map((a) => {
-            const b = reimburseButtons[a];
-            if (!b) return null;
-            return (
-              <Button key={a} size="small" tone={b.tone} variant={b.variant}
-                onClick={() => onDecide({
-                  title: `${b.label}: reimburse`, confirmLabel: b.label, tone: b.tone, noteRequired: b.noteRequired,
-                  onConfirm: (note) => run((s) => actOnReimburse(s, r.id, a, actor, today, note || undefined), "Keputusan tersimpan."),
-                })}>
-                {b.label}
-              </Button>
-            );
-          })}
-        />
-      ))}
-    </Stagger>
+    <>
+      <ClaimTable list={rows} onOpen={setOpenId} showOwner empty="Tidak ada reimburse yang perlu ditinjau" />
+      {open && <ClaimDetail claim={open} onClose={() => setOpenId(null)} onPay={setPaying} />}
+      {paying && <PayDialog ids={paying} onClose={() => setPaying(null)} />}
+    </>
   );
 }

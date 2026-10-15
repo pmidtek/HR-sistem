@@ -18,6 +18,8 @@ type ComboboxProps = {
   placeholder?: string;
   searchPlaceholder?: string;
   error?: string;
+  /** Override gaya tombol, mis. untuk sel tabel. */
+  triggerClassName?: string;
 };
 
 /** Picker searchable untuk daftar yang terus bertambah (pegawai, project, company). */
@@ -29,6 +31,7 @@ export function Combobox({
   placeholder = "Pilih…",
   searchPlaceholder = "Cari…",
   error,
+  triggerClassName,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -46,6 +49,7 @@ export function Combobox({
               "shadow-[inset_0_0_0_1px_var(--border-default)] hover:shadow-[inset_0_0_0_1px_var(--border-strong)]",
               open && "shadow-[inset_0_0_0_1px_var(--brand)]",
               error && "shadow-[inset_0_0_0_1px_var(--danger)]",
+              triggerClassName,
             )}
           >
             <span className={cn("truncate", selected ? "text-fg" : "text-fg-subtle")}>

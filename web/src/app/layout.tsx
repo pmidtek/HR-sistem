@@ -16,7 +16,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "HRIS Internal",
+  title: "idtek dashboard",
   description: "Timesheet, cuti, lembur, reimburse, payroll, dan project.",
 };
 

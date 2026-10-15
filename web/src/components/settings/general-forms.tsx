@@ -73,6 +73,7 @@ export function PayrollForm({ readOnly }: FormProps) {
           <Input label="Tanggal cutoff" type="number" min={1} max={28} value={d.cutoffDay} onChange={(e) => setDraft({ ...d, cutoffDay: num(e.target.value) })} helperText={`Periode: tgl ${d.cutoffDay + 1} bulan lalu s/d tgl ${d.cutoffDay} bulan ini.`} />
         )}
       </div>
+      <Input label="Kurs USD untuk reimburse (Rp per $1)" inputMode="numeric" value={formatNumber(d.usdRate)} onChange={(e) => setDraft({ ...d, usdRate: parseRp(e.target.value) })} helperText="Dipakai untuk mengisi otomatis kolom Rupiah. Pegawai tetap bisa mengubahnya sesuai tagihan kartu." />
       <Switch checked={d.reimburseViaPayroll} onChange={(v) => setDraft({ ...d, reimburseViaPayroll: v })} label="Reimburse yang disetujui dibayar lewat payroll" />
       <Switch checked={d.payslipPasswordProtected} onChange={(v) => setDraft({ ...d, payslipPasswordProtected: v })} label="PDF slip gaji dilindungi password (tanggal lahir DDMMYYYY)" />
     </SettingsSection>

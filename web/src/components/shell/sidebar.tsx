@@ -6,19 +6,11 @@ import { canAccess, navGroups } from "@/lib/access";
 import { cn } from "@/lib/cn";
 import { useAuthed } from "@/store/app-provider";
 import { Icon } from "@/components/ui/icon";
+import { IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
 import { pendingCountFor } from "./pending";
 
 export function Logo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex size-7 items-center justify-center rounded-xs bg-brand font-display text-sm font-bold text-fg-on-brand">
-        H
-      </span>
-      <span className="font-display text-base font-medium tracking-[-0.02em] text-fg">
-        HRIS <span className="text-fg-subtle">Internal</span>
-      </span>
-    </div>
-  );
+  return <IdtekLogo />;
 }
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -63,6 +55,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         );
       })}
+      <div className="mt-auto px-2.5 pt-4">
+        <PoweredByCartogram />
+      </div>
     </nav>
   );
 }

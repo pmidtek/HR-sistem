@@ -1,138 +1,72 @@
 "use client";
 
-import { ArrowRight, Lock, Mail } from "lucide-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
-import { roleLabel } from "@/lib/access";
+import { useEffect, useState } from "react";
 import { useApp } from "@/store/app-provider";
-import { Logo } from "@/components/shell/sidebar";
-import { Button } from "@/components/ui/button";
-import { Avatar, Eyebrow } from "@/components/ui/display";
-import { Input } from "@/components/ui/form";
-import { Icon } from "@/components/ui/icon";
-import { Stagger, StaggerItem } from "@/components/ui/motion";
-import { LoginBackdrop } from "@/components/login/login-backdrop";
+import { IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
+import { GradientBackdrop } from "@/components/login/gradient-backdrop";
+import { LoginIllustration } from "@/components/login/login-illustration";
+import { LoginModal, type LoginTab } from "@/components/login/login-modal";
 
-function MicrosoftLogo() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 21 21" aria-hidden>
-      <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-      <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-      <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-      <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-    </svg>
-  );
-}
+const rise = (delay: number) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const },
+});
 
 export default function LoginPage() {
-  const { state, user, login } = useApp();
+  const { user } = useApp();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | undefined>();
+  const [modal, setModal] = useState<LoginTab | null>(null);
 
   useEffect(() => {
     if (user) router.replace("/dashboard");
   }, [user, router]);
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const found = state.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!found || password.length === 0) {
-      setError("Email atau password salah.");
-      return;
-    }
-    login(found.id);
-  }
-
-  const demo = ["u1", "u2", "u3", "u4", "u5", "u6"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
-
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <LoginBackdrop />
-      <Stagger as="section" className="relative hidden flex-col justify-between overflow-hidden border-r border-line glass p-12 lg:flex">
-        <StaggerItem index={0}>
-          <Logo />
-        </StaggerItem>
-        <div className="flex flex-col gap-6">
-          <StaggerItem index={1}>
-            <Eyebrow tone="success">Semua sistem berjalan</Eyebrow>
-          </StaggerItem>
-          <StaggerItem index={2}>
-            <h1 className="max-w-lg font-serif text-6xl leading-[1.05] tracking-[-0.02em] text-fg">
-              Catat kerja hari ini. <em className="text-fg-brand">Gajian tanpa drama.</em>
-            </h1>
-          </StaggerItem>
-          <StaggerItem index={3}>
-            <p className="max-w-md text-md text-fg-muted">
-              Timesheet, cuti, lembur, reimburse, sampai slip gaji. Semua di satu tempat, dengan alur persetujuan yang jelas.
-            </p>
-          </StaggerItem>
-        </div>
-        <StaggerItem index={4} className="grid grid-cols-3 gap-6 border-t border-line pt-6">
-          {[["15 mnt", "Ketelitian timesheet"], ["2 tahap", "Alur persetujuan"], ["Otomatis", "Lembur & slip gaji"]].map(([v, l]) => (
-            <div key={l}>
-              <p className="font-serif text-3xl text-fg">{v}</p>
-              <p className="text-xs text-fg-subtle">{l}</p>
-            </div>
-          ))}
-        </StaggerItem>
-      </Stagger>
+    <div className="relative isolate flex min-h-screen flex-col text-white">
+      <GradientBackdrop />
 
-      <section className="flex items-center justify-center px-6 py-12">
-        <Stagger className="flex w-full max-w-sm flex-col gap-8">
-          <div className="lg:hidden">
-            <Logo />
-          </div>
-          <StaggerItem index={1} className="flex flex-col gap-1.5">
-            <h2 className="font-display text-2xl font-medium tracking-[-0.02em]">Masuk</h2>
-            <p className="text-sm text-fg-muted">Gunakan akun kantor Anda.</p>
-          </StaggerItem>
+      <header className="relative flex items-center justify-between px-6 py-5 sm:px-10">
+        <IdtekLogo tone="light" />
+        <button type="button" onClick={() => setModal("login")} className="rounded-xxs px-3 py-1.5 text-xs text-white/75 hover:bg-white/10 hover:text-white">
+          Masuk
+        </button>
+      </header>
 
-          <StaggerItem index={2}>
-            <Button variant="secondary" tone="neutral" fullWidth disabled iconLeft={<MicrosoftLogo />}>
-              Masuk dengan Microsoft (segera)
-            </Button>
-          </StaggerItem>
+      <main className="relative flex flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
+        <motion.div {...rise(0)}>
+          <LoginIllustration />
+        </motion.div>
+        <motion.h1
+          {...rise(0.1)}
+          className="mt-14 font-mono text-4xl font-semibold tracking-[-0.04em] sm:text-7xl"
+          style={{ textShadow: "0 0 40px rgba(243,106,29,0.45), 0 0 90px rgba(243,106,29,0.25)" }}
+        >
+          idtek <span className="font-normal text-[#f4a261]">dashboard</span>
+        </motion.h1>
+        <motion.p {...rise(0.18)} className="mt-4 text-sm text-white/65 sm:text-base">
+          Timesheet, cuti, reimburse, sampai gaji.
+        </motion.p>
+        <motion.div {...rise(0.26)} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button type="button" onClick={() => setModal("login")} className="h-10 rounded-xxs bg-white px-7 text-sm font-medium text-[#1a1614] shadow-[0_10px_30px_-10px_rgba(243,106,29,0.6)] transition-colors hover:bg-white/90">
+            Masuk
+          </button>
+          <button type="button" onClick={() => setModal("demo")} className="h-10 rounded-xxs bg-white/[0.06] px-7 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] backdrop-blur-md transition-colors hover:bg-white/[0.12]">
+            Coba akun demo
+          </button>
+        </motion.div>
+        <motion.p {...rise(0.32)} className="mt-5 text-xs text-white/40">
+          Akun dibuat oleh HR. Belum punya? Hubungi HR.
+        </motion.p>
+      </main>
 
-          <StaggerItem index={3} className="flex items-center gap-3 text-xs text-fg-subtle">
-            <span className="h-px flex-1 bg-line" />
-            atau
-            <span className="h-px flex-1 bg-line" />
-          </StaggerItem>
+      <footer className="relative flex items-center justify-center px-6 py-6">
+        <PoweredByCartogram tone="light" />
+      </footer>
 
-          <StaggerItem index={4}>
-            <form onSubmit={onSubmit} className="flex flex-col gap-4">
-              <Input label="Email" type="email" autoComplete="email" placeholder="nama@perusahaan.co.id" value={email} onChange={(e) => setEmail(e.target.value)} iconLeft={<Icon icon={Mail} />} />
-              <Input label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} iconLeft={<Icon icon={Lock} />} error={error} />
-              <Button type="submit" fullWidth iconRight={<Icon icon={ArrowRight} />}>
-                Masuk
-              </Button>
-            </form>
-          </StaggerItem>
-
-          <StaggerItem index={5} className="flex flex-col gap-2">
-            <p className="font-mono text-[10px] tracking-[0.08em] text-fg-subtle uppercase">Akun demo (klik untuk masuk)</p>
-            <div className="grid grid-cols-1 gap-1.5">
-              {demo.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => login(u.id)}
-                  className="flex items-center gap-3 rounded-xs px-2.5 py-2 text-left shadow-[inset_0_0_0_1px_var(--border-default)] hover:bg-hover"
-                >
-                  <Avatar name={u.name} size="small" />
-                  <span className="flex-1 text-sm text-fg">{u.name}</span>
-                  <span className="text-xs text-fg-subtle">
-                    {roleLabel[u.role]}
-                    {u.role === "employee" && ` · ${state.teams.find((t) => t.id === u.teamId)?.name ?? ""}`}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </StaggerItem>
-        </Stagger>
-      </section>
+      {modal && <LoginModal tab={modal} onTabChange={setModal} onClose={() => setModal(null)} />}
     </div>
   );
 }

@@ -99,17 +99,37 @@ export type ReimbursementStatus =
 
 export type ReimbursementCategory = { id: string; name: string };
 
+/** Satu baris di pengajuan reimburse (satu transaksi). */
+export type ReimbursementItem = {
+  id: string;
+  date: string;
+  description: string;
+  categoryId: string;
+  /** Kode project bebas; "OTHERS" atau null (belum diisi) juga boleh. */
+  projectCode: string | null;
+  /** Biaya asli dalam USD, integer sen ($22.00 = 2200). null jika transaksi Rupiah. */
+  amountUsdCents: number | null;
+  /** Biaya dalam Rupiah (yang diganti ke pegawai). */
+  amount: number;
+  files: string[];
+  /** Diisi jika baris ini ditolak saat review (baris lain tetap jalan). */
+  declined: { note: string; byUserId: string } | null;
+};
+
+export type ReimbursePayment = { date: string; method: "transfer" | "payroll"; reference: string; byUserId: string };
+
+/** Satu pengajuan reimburse = satu grup baris; disetujui dan dibayar sekaligus. */
 export type Reimbursement = {
   id: string;
+  /** Nomor tampilan, mis. RB-2610-003. */
+  number: string;
   userId: string;
-  date: string;
-  categoryId: string;
-  projectCode: string;
-  amount: number;
-  description: string;
-  files: string[];
+  title: string;
+  submittedAt: string;
+  items: ReimbursementItem[];
   status: ReimbursementStatus;
   paidAt: string | null;
+  payment: ReimbursePayment | null;
   logs: ApprovalLog[];
 };
 

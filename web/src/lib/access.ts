@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Moon,
   Receipt,
+  ReceiptText,
   Settings,
   TableProperties,
   Users,
@@ -24,6 +25,7 @@ export type Feature =
   | "payslips"
   | "approvals"
   | "timesheet_recap"
+  | "reimburse_recap"
   | "payroll"
   | "projects"
   | "employees"
@@ -53,6 +55,7 @@ export function canAccess(user: User, team: Team | null, feature: Feature): bool
     case "settings":
       return r !== "employee";
     case "payroll":
+    case "reimburse_recap":
       return r === "finance" || r === "stakeholder";
     case "projects":
       // Semua pegawai; daftar project difilter per keanggotaan (lib/projects.ts).
@@ -95,6 +98,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { feature: "approvals", href: "/approvals", label: "Persetujuan", icon: CheckCheck },
       { feature: "timesheet_recap", href: "/timesheet-recap", label: "Rekap Timesheet", icon: TableProperties },
+      { feature: "reimburse_recap", href: "/reimburse-recap", label: "Rekap Reimburse", icon: ReceiptText },
       { feature: "payroll", href: "/payroll", label: "Payroll", icon: Wallet },
       { feature: "employees", href: "/employees", label: "Pegawai", icon: Users },
       { feature: "settings", href: "/settings", label: "Pengaturan", icon: Settings },

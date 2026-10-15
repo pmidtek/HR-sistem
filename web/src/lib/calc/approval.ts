@@ -52,8 +52,14 @@ export function allowedReimburseActions(actor: Actor, ownerId: string, status: R
   if (isOwner && status === "revision") out.push("resubmit");
   if (!isOwner && status === "pending_finance" && actor.role === "finance") out.push("forward", "revision", "reject");
   if (!isOwner && status === "pending_stakeholder" && actor.role === "stakeholder") out.push("approve", "reject");
-  if (status === "approved" && actor.role === "finance") out.push("mark_paid");
+  if (!isOwner && status === "approved" && actor.role === "finance") out.push("mark_paid");
   return out;
+}
+
+/** Boleh menolak/memulihkan baris tertentu? Hanya peninjau di tahapnya, bukan pemilik. */
+export function canReviewReimburseItems(actor: Actor, ownerId: string, status: ReimbursementStatus): boolean {
+  if (actor.id === ownerId) return false;
+  return (status === "pending_finance" && actor.role === "finance") || (status === "pending_stakeholder" && actor.role === "stakeholder");
 }
 
 export const leaveStatusLabel: Record<ApprovalStatus, string> = {

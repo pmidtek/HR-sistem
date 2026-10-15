@@ -1,81 +1,58 @@
 "use client";
 
-import { FileImage, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-import { allowedReimburseActions, reimburseStatusLabel } from "@/lib/calc/approval";
-import { formatDate, formatRupiah } from "@/lib/format";
+import { stageOf, type Stage } from "@/lib/calc/reimburse";
+import type { Reimbursement } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { actOnReimburse } from "@/store/actions";
-import { ApprovalTimeline } from "@/components/approval-timeline";
-import { ReimburseForm } from "@/components/reimburse/reimburse-form";
+import { ClaimDetail } from "@/components/reimburse/claim-detail";
+import { ClaimTable } from "@/components/reimburse/claim-table";
+import { stageMeta } from "@/components/reimburse/parts";
+import { ReimburseSheet } from "@/components/reimburse/reimburse-sheet";
+import { StatusFlow } from "@/components/reimburse/status-flow";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
-import { ReimburseBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, EmptyState, Stat } from "@/components/ui/display";
 import { Icon } from "@/components/ui/icon";
 
+type Editor = { key: number; editing?: Reimbursement } | null;
+
 export default function ReimbursementsPage() {
-  const { state, user, actor, today, run } = useAuthed();
-  const [open, setOpen] = useState(false);
-  const [formKey, setFormKey] = useState(0);
-  const mine = state.reimbursements.filter((r) => r.userId === user.id);
-  const categoryName = (id: string) => state.reimbursementCategories.find((c) => c.id === id)?.name ?? id;
-  const sum = (pred: (s: string) => boolean) => mine.filter((r) => pred(r.status)).reduce((s, r) => s + r.amount, 0);
+  const { state, user } = useAuthed();
+  const [editor, setEditor] = useState<Editor>(null);
+  const [stage, setStage] = useState<Stage | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const mine = state.reimbursements.filter((r) => r.userId === user.id).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  const shown = stage ? mine.filter((r) => stageOf(r.status) === stage) : mine;
+  const open = openId ? state.reimbursements.find((r) => r.id === openId) : undefined;
+
+  function startEditor(editing?: Reimbursement) {
+    setOpenId(null);
+    setEditor((e) => ({ key: (e?.key ?? 0) + 1, editing }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
     <>
       <PageHeader
         title="Reimburse"
         accent="tanpa ribet."
-        description={state.settings.payroll.reimburseViaPayroll ? "Reimburse yang disetujui dibayarkan lewat payroll bulan berjalan." : "Reimburse yang disetujui dibayar terpisah oleh Finance."}
-        actions={<Button iconLeft={<Icon icon={Plus} />} onClick={() => { setFormKey((k) => k + 1); setOpen(true); }}>Ajukan reimburse</Button>}
+        description={state.settings.payroll.reimburseViaPayroll ? "Yang sudah disetujui dibayar lewat payroll atau transfer oleh Finance." : "Yang sudah disetujui dibayar terpisah oleh Finance."}
+        actions={!editor && <Button iconLeft={<Icon icon={Plus} />} onClick={() => startEditor()}>Ajukan reimburse</Button>}
       />
 
-      <Card padding="lg" className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <Stat label="Dalam proses" value={formatRupiah(sum((s) => s.startsWith("pending") || s === "revision"))} />
-        <Stat label="Disetujui, belum dibayar" value={formatRupiah(sum((s) => s === "approved"))} />
-        <Stat label="Sudah dibayar" value={formatRupiah(sum((s) => s === "paid"))} />
-      </Card>
+      {editor && <ReimburseSheet key={editor.key} editing={editor.editing} onClose={() => setEditor(null)} />}
 
-      <SectionTitle>Pengajuan saya</SectionTitle>
-      {mine.length === 0 ? (
-        <EmptyState title="Belum ada reimburse" />
-      ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
-          {mine.map((r) => (
-            <Card key={r.id} className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-serif text-2xl leading-none">{formatRupiah(r.amount)}</p>
-                  <p className="mt-1 text-sm text-fg-muted">
-                    {categoryName(r.categoryId)} · {formatDate(r.date)} · <span className="font-mono text-fg-brand">{r.projectCode}</span>
-                  </p>
-                </div>
-                <ReimburseBadge status={r.status} />
-              </div>
-              <p className="text-sm">{r.description}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {r.files.map((f) => (
-                  <span key={f} className="inline-flex items-center gap-1.5 rounded-xxs bg-sunken px-2 py-1 text-xs text-fg-muted">
-                    <Icon icon={FileImage} size={12} /> {f}
-                  </span>
-                ))}
-              </div>
-              {r.paidAt && <p className="text-xs text-fg-success">Dibayar {formatDate(r.paidAt)}</p>}
-              <ApprovalTimeline logs={r.logs} labels={reimburseStatusLabel} />
-              {allowedReimburseActions(actor, r.userId, r.status).includes("resubmit") && (
-                <div>
-                  <Button size="small" onClick={() => run((s) => actOnReimburse(s, r.id, "resubmit", actor, today), "Dikirim ulang ke Finance.")}>
-                    Perbaiki & kirim ulang
-                  </Button>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="mb-8">
+        <StatusFlow list={mine} selected={stage} onSelect={setStage} title="Total reimburse saya" />
+      </div>
 
-      {open && <ReimburseForm key={formKey} open={open} onOpenChange={setOpen} />}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <SectionTitle>{stage ? `Pengajuan · ${stageMeta[stage].label}` : "Pengajuan saya"}</SectionTitle>
+        {stage && <button type="button" onClick={() => setStage(null)} className="text-xs text-fg-brand hover:underline">Tampilkan semua</button>}
+      </div>
+      <ClaimTable list={shown} onOpen={setOpenId} />
+
+      {open && <ClaimDetail claim={open} onClose={() => setOpenId(null)} onRevise={startEditor} />}
     </>
   );
 }

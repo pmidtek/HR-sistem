@@ -37,7 +37,7 @@ export const defaultSettings: AppSettings = {
     holidayHour10to12: 4,
     flatRatePerHour: 50_000,
   },
-  payroll: { periodMode: "cutoff", cutoffDay: 25, reimburseViaPayroll: true, payslipPasswordProtected: false },
+  payroll: { periodMode: "cutoff", cutoffDay: 25, reimburseViaPayroll: true, usdRate: 16_500, payslipPasswordProtected: false },
   bpjs: [
     { id: "kes", name: "BPJS Kesehatan", employeeBps: 100, employerBps: 400, wageCap: 12_000_000 },
     { id: "jht", name: "BPJS JHT", employeeBps: 200, employerBps: 370, wageCap: null },

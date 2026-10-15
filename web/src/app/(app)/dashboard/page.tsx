@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
 import { ActionSection, FinanceSection, PeopleSection, ProjectSection } from "@/components/dashboard/sections";
 import { MySection } from "@/components/dashboard/my-section";
+import { ReimburseCompanySection } from "@/components/dashboard/reimburse-section";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { CountUpScope } from "@/components/ui/motion";
 
@@ -21,6 +22,13 @@ export default function DashboardPage() {
           <div>
             <SectionTitle>Perlu tindakan saya</SectionTitle>
             <ActionSection />
+          </div>
+        )}
+
+        {(role === "stakeholder" || role === "finance") && (
+          <div>
+            <SectionTitle>Reimburse</SectionTitle>
+            <ReimburseCompanySection />
           </div>
         )}
 
