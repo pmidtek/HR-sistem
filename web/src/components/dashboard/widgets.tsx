@@ -9,7 +9,7 @@ import { CountUp, GrowBar, StaggerItem } from "../ui/motion";
 /** Satu seri, horizontal: magnitudo per kategori. Teks memakai token teks; warna hanya di bar. */
 export function BarList({ rows, format }: { rows: { label: string; value: number; hint?: string }[]; format: (v: number) => string }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
-  if (rows.length === 0) return <p className="text-xs text-fg-muted">Belum ada data.</p>;
+  if (rows.length === 0) return <p className="text-xs text-fg-muted">No data yet.</p>;
   return (
     <div className="flex flex-col gap-2.5" role="table">
       {rows.map((r) => (
@@ -47,7 +47,7 @@ export function ActionTile({ label, count, href }: { label: string; count: numbe
         <Card interactive tone={count > 0 ? "brand" : "raised"} className="flex flex-col gap-1">
           <span className="text-xs text-fg-muted">{label}</span>
           <CountUp value={count} className="font-serif text-4xl leading-none" />
-          <span className="text-xs text-fg-subtle">{count > 0 ? "menunggu keputusan" : "tidak ada"}</span>
+          <span className="text-xs text-fg-subtle">{count > 0 ? "waiting for you" : "all clear"}</span>
         </Card>
       </Link>
     </StaggerItem>

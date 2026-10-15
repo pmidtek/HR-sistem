@@ -1,17 +1,17 @@
 import type { ActivityCode, Holiday, Team, User } from "../types";
 
 export const teams: Team[] = [
-  { id: "t-mgmt", name: "Manajemen", kind: "support" },
+  { id: "t-mgmt", name: "Management", kind: "support" },
   { id: "t-ops", name: "HR & Finance", kind: "support" },
   { id: "t-sales", name: "Sales", kind: "sales" },
-  { id: "t-prod", name: "Produk", kind: "delivery" },
+  { id: "t-prod", name: "Product", kind: "delivery" },
   { id: "t-data", name: "Data", kind: "delivery" },
   { id: "t-eng", name: "Engineering", kind: "delivery" },
 ];
 
 export const users: User[] = [
-  { id: "u1", employeeCode: "EMP-0001", name: "Rina Wijaya", email: "rina@perusahaan.co.id", role: "stakeholder", teamId: "t-mgmt", position: "Direktur Utama", joinDate: "2019-03-01", active: true },
-  { id: "u10", employeeCode: "EMP-0002", name: "Hendra Gunawan", email: "hendra@perusahaan.co.id", role: "stakeholder", teamId: "t-mgmt", position: "Direktur Operasional", joinDate: "2019-03-01", active: true },
+  { id: "u1", employeeCode: "EMP-0001", name: "Rina Wijaya", email: "rina@perusahaan.co.id", role: "stakeholder", teamId: "t-mgmt", position: "Chief Executive Officer", joinDate: "2019-03-01", active: true },
+  { id: "u10", employeeCode: "EMP-0002", name: "Hendra Gunawan", email: "hendra@perusahaan.co.id", role: "stakeholder", teamId: "t-mgmt", position: "Chief Operating Officer", joinDate: "2019-03-01", active: true },
   { id: "u2", employeeCode: "EMP-0003", name: "Sari Hartono", email: "sari@perusahaan.co.id", role: "hr", teamId: "t-ops", position: "HR Manager", joinDate: "2020-07-15", active: true },
   { id: "u3", employeeCode: "EMP-0004", name: "Dewi Lestari", email: "dewi@perusahaan.co.id", role: "finance", teamId: "t-ops", position: "Finance Lead", joinDate: "2020-09-01", active: true },
   { id: "u4", employeeCode: "EMP-0012", name: "Budi Santoso", email: "budi@perusahaan.co.id", role: "employee", teamId: "t-eng", position: "Backend Engineer", joinDate: "2022-02-01", active: true },

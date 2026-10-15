@@ -10,6 +10,8 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 - **Modul Sales Pipeline ditunda** (13 Okt 2026). Data company/opportunity tetap ada untuk menu Client project; halaman `/sales` diarahkan ke `/projects`.
 - **Project Workspace** (12 menu) mengikuti `docs/PROJECT-WORKSPACE.md` dan sudah selesai di frontend. Hak akses project terpusat di `web/src/lib/projects.ts`.
 - Grafik dibuat sendiri dengan SVG (`web/src/components/charts/`); warna seri memakai token `--chart-1..3` yang sudah divalidasi (CVD & kontras). Markdown memakai `react-markdown`.
+- **Rilis bertahap** (15 Okt 2026): modul yang sudah dirilis diatur di `releasedFeatures` (`web/src/lib/access.ts`). Saat ini baru Dashboard + Reimburse (+ Approvals, Employees, Settings). Modul lain tampil di menu dengan label "Soon" dan halamannya "Coming soon".
+- Nama aplikasi: **idtek dashboard**. Ikon IDTEK ada di `web/public/brand/idtek-icon.png` dan `web/src/app/icon.png` (favicon).
 - Desain mengikuti **Cartogram Design System** (token di `web/src/styles/tokens.css`, komponen di `web/src/components/ui/`).
 
 ## Cara kerja
@@ -54,8 +56,8 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
   ```
 
 ## Konvensi
-- Bahasa UI: **Bahasa Indonesia**. Kode, nama variabel, dan nama koleksi: **English** (`leave_requests`, `overtime_requests`).
-- Format tampilan: tanggal `DD MMM YYYY`, uang `Rp1.250.000`.
+- Bahasa UI: **English** (permintaan owner, 15 Okt 2026). Kode, nama variabel, dan nama koleksi: **English** (`leave_requests`, `overtime_requests`). Komentar kode dan penjelasan ke owner tetap Bahasa Indonesia.
+- Format tampilan: tanggal `DD MMM YYYY` (bulan bahasa Inggris, mis. `07 Oct 2026`), uang `Rp1.250.000`.
 - Picker untuk daftar yang terus bertambah (pegawai, project, company) wajib **searchable**.
 - Ukuran file: komponen React ≤ 250 baris, extension endpoint/hook ≤ 300 baris. Pecah kalau lebih.
 

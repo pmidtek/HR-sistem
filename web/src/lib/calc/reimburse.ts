@@ -1,4 +1,5 @@
 import type { Reimbursement, ReimbursementItem, ReimbursementStatus } from "../types";
+import { addDays, dayOfWeek } from "./dates";
 
 /** Satu baris di lembar input reimburse (sebelum disimpan). */
 export type ReimburseRowInput = Pick<ReimbursementItem, "date" | "description" | "categoryId" | "projectCode" | "amountUsdCents" | "amount" | "files">;
@@ -153,4 +154,33 @@ export function nextClaimNumber(existing: string[], today: string): string {
   const prefix = `RB-${today.slice(2, 4)}${today.slice(5, 7)}-`;
   const max = existing.filter((n) => n.startsWith(prefix)).reduce((m, n) => Math.max(m, Number(n.slice(prefix.length)) || 0), 0);
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+/**
+ * Perkiraan tanggal bayar: hari bayar pertama (mis. Rabu/Jumat) yang ≥ tanggal pengajuan + leadDays,
+ * melewati hari libur. Contoh (Rabu & Jumat, 2 hari): Senin → Rabu, Rabu → Jumat, Kamis → Rabu depan.
+ */
+export function estimatedPayDate(submittedAt: string, rule: { payDays: number[]; leadDays: number }, holidays: Set<string> = new Set()): string {
+  if (rule.payDays.length === 0) return addDays(submittedAt, rule.leadDays);
+  let d = addDays(submittedAt, Math.max(0, rule.leadDays));
+  for (let i = 0; i < 60; i++, d = addDays(d, 1)) {
+    if (rule.payDays.includes(dayOfWeek(d)) && !holidays.has(d)) return d;
+  }
+  return d;
+}
+
+/** Filter periode: semua, per tahun, per bulan, atau rentang tanggal (inklusif). */
+export type PeriodFilter =
+  | { kind: "all" }
+  | { kind: "year"; year: number }
+  | { kind: "month"; month: string }
+  | { kind: "range"; from: string; to: string };
+
+export function inPeriod(date: string, f: PeriodFilter): boolean {
+  switch (f.kind) {
+    case "all": return true;
+    case "year": return date.startsWith(`${f.year}-`);
+    case "month": return date.startsWith(f.month);
+    case "range": return (!f.from || date >= f.from) && (!f.to || date <= f.to);
+  }
 }

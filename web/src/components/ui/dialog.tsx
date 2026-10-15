@@ -39,7 +39,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
               )}
             </div>
             <RadixDialog.Close asChild>
-              <IconButton label="Tutup" size="small">
+              <IconButton label="Close" size="small">
                 <Icon icon={X} />
               </IconButton>
             </RadixDialog.Close>

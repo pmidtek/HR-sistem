@@ -33,10 +33,10 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
 
   function confirm() {
     const minutes = decision.requestedMinutes !== undefined ? Math.round(Number(hours.replace(",", ".")) * 4) * 15 : undefined;
-    if (minutes !== undefined && (Number.isNaN(minutes) || minutes <= 0)) return setError("Jam tidak valid.");
+    if (minutes !== undefined && (Number.isNaN(minutes) || minutes <= 0)) return setError("Invalid hours.");
     const changed = minutes !== undefined && minutes !== decision.requestedMinutes;
     if ((decision.noteRequired || changed) && !note.trim()) {
-      return setError(changed ? "Perubahan jumlah jam wajib disertai catatan." : "Catatan wajib diisi.");
+      return setError(changed ? "Changing the hours requires a note." : "A note is required.");
     }
     if (!decision.onConfirm(note.trim(), changed ? minutes : undefined)) return;
     // Keputusan positif (setujui/teruskan/bayar): tampilkan centang dulu, lalu tutup.
@@ -52,7 +52,7 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
       footer={
         !done && (
           <>
-            <Button variant="secondary" tone="neutral" onClick={onClose}>Batal</Button>
+            <Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button>
             <Button tone={decision.tone} onClick={confirm}>{decision.confirmLabel}</Button>
           </>
         )
@@ -61,21 +61,21 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
       {done ? (
         <div className="flex flex-col items-center gap-3 py-6" role="status">
           <SuccessCheck size={72} />
-          <p className="text-sm text-fg">Tersimpan</p>
+          <p className="text-sm text-fg">Saved</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {decision.requestedMinutes !== undefined && (
             <Input
-              label="Jam lembur yang disetujui"
-              helperText="Kelipatan 0,25 jam. Ubah jika berbeda dari pengajuan (wajib isi catatan)."
+              label="Approved overtime hours"
+              helperText="In steps of 0.25 h. Change it if different from the request (note required)."
               inputMode="decimal"
               value={hours}
               onChange={(e) => setHours(e.target.value)}
             />
           )}
           <Textarea
-            label={decision.noteRequired ? "Catatan (wajib)" : "Catatan (opsional)"}
+            label={decision.noteRequired ? "Reason (required)" : "Note (optional)"}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             error={error}

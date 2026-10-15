@@ -35,7 +35,7 @@ export const roleLabel: Record<Role, string> = {
   stakeholder: "Stakeholder",
   hr: "HR",
   finance: "Finance",
-  employee: "Pegawai",
+  employee: "Employee",
 };
 
 /** Matriks akses dari BRIEF.md Bagian 2. Di server, aturan yang sama ditegakkan oleh permission Directus. */
@@ -55,8 +55,9 @@ export function canAccess(user: User, team: Team | null, feature: Feature): bool
     case "settings":
       return r !== "employee";
     case "payroll":
-    case "reimburse_recap":
       return r === "finance" || r === "stakeholder";
+    case "reimburse_recap":
+      return r !== "employee";
     case "projects":
       // Semua pegawai; daftar project difilter per keanggotaan (lib/projects.ts).
       return true;
@@ -74,37 +75,52 @@ export type NavGroup = { label: string; items: NavItem[] };
 
 export const navGroups: NavGroup[] = [
   {
-    label: "Utama",
+    label: "Main",
     items: [{ feature: "dashboard", href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
-    label: "Pekerjaan Saya",
+    label: "My work",
     items: [
       { feature: "timesheet", href: "/timesheet", label: "Timesheet", icon: Clock },
-      { feature: "leave", href: "/leave", label: "Cuti", icon: CalendarDays },
-      { feature: "overtime", href: "/overtime", label: "Lembur", icon: Moon },
-      { feature: "reimbursements", href: "/reimbursements", label: "Reimburse", icon: Receipt },
-      { feature: "payslips", href: "/payslips", label: "Slip Gaji", icon: FileText },
+      { feature: "leave", href: "/leave", label: "Leave", icon: CalendarDays },
+      { feature: "overtime", href: "/overtime", label: "Overtime", icon: Moon },
+      { feature: "reimbursements", href: "/reimbursements", label: "Reimbursement", icon: Receipt },
+      { feature: "payslips", href: "/payslips", label: "Payslips", icon: FileText },
     ],
   },
   {
-    label: "Bisnis",
+    label: "Business",
     items: [
-      { feature: "projects", href: "/projects", label: "Project", icon: FolderKanban },
+      { feature: "projects", href: "/projects", label: "Projects", icon: FolderKanban },
     ],
   },
   {
-    label: "Kelola",
+    label: "Manage",
     items: [
-      { feature: "approvals", href: "/approvals", label: "Persetujuan", icon: CheckCheck },
-      { feature: "timesheet_recap", href: "/timesheet-recap", label: "Rekap Timesheet", icon: TableProperties },
-      { feature: "reimburse_recap", href: "/reimburse-recap", label: "Rekap Reimburse", icon: ReceiptText },
+      { feature: "approvals", href: "/approvals", label: "Approvals", icon: CheckCheck },
+      { feature: "timesheet_recap", href: "/timesheet-recap", label: "Timesheet recap", icon: TableProperties },
+      { feature: "reimburse_recap", href: "/reimburse-recap", label: "Reimbursement recap", icon: ReceiptText },
       { feature: "payroll", href: "/payroll", label: "Payroll", icon: Wallet },
-      { feature: "employees", href: "/employees", label: "Pegawai", icon: Users },
-      { feature: "settings", href: "/settings", label: "Pengaturan", icon: Settings },
+      { feature: "employees", href: "/employees", label: "Employees", icon: Users },
+      { feature: "settings", href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
+
+/**
+ * Modul yang sudah dirilis. Modul lain tetap tampil di menu tapi berlabel "Soon" dan halamannya "Coming soon".
+ * Rilis bertahap (permintaan owner, 15 Okt 2026): mulai dari Reimburse. Tambahkan fitur di sini untuk merilis.
+ */
+export const releasedFeatures: ReadonlySet<Feature> = new Set<Feature>([
+  "dashboard",
+  "reimbursements",
+  "reimburse_recap",
+  "approvals",
+  "employees",
+  "settings",
+]);
+
+export const isReleased = (f: Feature) => releasedFeatures.has(f);
 
 export function featureForPath(pathname: string): Feature | null {
   for (const g of navGroups) {

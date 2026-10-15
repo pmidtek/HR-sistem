@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Reimbursement, ReimbursementItem, ReimbursementStatus } from "../types";
 import {
-  claimDeclined, claimGross, claimTotal, isBlankRow, nextClaimNumber, normalizeProjectCode, parseUsdCents,
+  claimDeclined, claimGross, claimTotal, estimatedPayDate, inPeriod, isBlankRow, nextClaimNumber, normalizeProjectCode, parseUsdCents,
   paymentState, recapBy, recapTotals, stageTotals, sumItemsBy, usdToIdr, validateReimburseRow, type ReimburseRowInput,
 } from "./reimburse";
 
-const row: ReimburseRowInput = { date: "2026-09-08", description: "Tiket Whoosh pergi", categoryId: "transportation", projectCode: null, amountUsdCents: null, amount: 300_000, files: ["a.jpg", "b.jpg"] };
+const row: ReimburseRowInput = { date: "2026-09-08", description: "Tiket Whoosh pergi", categoryId: "transportation", projectCode: null, amountUsdCents: null, amount: 300_000, files: [{ name: "a.jpg", url: null }, { name: "b.jpg", url: null }] };
 
 function item(amount: number, declined = false, categoryId = "transportation"): ReimbursementItem {
   return { ...row, id: `i${amount}`, amount, categoryId, declined: declined ? { note: "Bukan biaya kantor", byUserId: "fin" } : null };
@@ -107,5 +107,33 @@ describe("nomor pengajuan", () => {
   it("urut per bulan", () => {
     expect(nextClaimNumber(["RB-2610-001", "RB-2610-007", "RB-2609-012"], "2026-10-07")).toBe("RB-2610-008");
     expect(nextClaimNumber([], "2026-11-01")).toBe("RB-2611-001");
+  });
+});
+
+describe("jadwal bayar (cutoff)", () => {
+  const rule = { payDays: [3, 5], leadDays: 2 }; // Rabu & Jumat
+  it("Senin → Rabu, Rabu → Jumat", () => {
+    expect(estimatedPayDate("2026-10-12", rule)).toBe("2026-10-14");
+    expect(estimatedPayDate("2026-10-14", rule)).toBe("2026-10-16");
+  });
+  it("Selasa → Jumat, Kamis/Jumat/akhir pekan → Rabu depan", () => {
+    expect(estimatedPayDate("2026-10-13", rule)).toBe("2026-10-16");
+    expect(estimatedPayDate("2026-10-15", rule)).toBe("2026-10-21");
+    expect(estimatedPayDate("2026-10-16", rule)).toBe("2026-10-21");
+    expect(estimatedPayDate("2026-10-18", rule)).toBe("2026-10-21");
+  });
+  it("hari libur dilewati", () => {
+    expect(estimatedPayDate("2026-10-12", rule, new Set(["2026-10-14"]))).toBe("2026-10-16");
+  });
+});
+
+describe("filter periode", () => {
+  it("bulan, tahun, rentang", () => {
+    expect(inPeriod("2026-09-08", { kind: "month", month: "2026-09" })).toBe(true);
+    expect(inPeriod("2026-10-01", { kind: "month", month: "2026-09" })).toBe(false);
+    expect(inPeriod("2026-01-01", { kind: "year", year: 2026 })).toBe(true);
+    expect(inPeriod("2026-09-15", { kind: "range", from: "2026-09-01", to: "2026-09-15" })).toBe(true);
+    expect(inPeriod("2026-09-16", { kind: "range", from: "2026-09-01", to: "2026-09-15" })).toBe(false);
+    expect(inPeriod("2020-01-01", { kind: "all" })).toBe(true);
   });
 });

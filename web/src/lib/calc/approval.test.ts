@@ -45,9 +45,12 @@ describe("approval reimburse", () => {
     expect(allowedReimburseActions(fin, "fin1", "pending_finance")).toEqual([]);
   });
 
-  it("Finance tandai dibayar setelah disetujui", () => {
+  it("Finance/HR/Stakeholder tandai dibayar setelah disetujui, bukan pemilik atau pegawai", () => {
     expect(allowedReimburseActions(fin, "e1", "approved")).toEqual(["mark_paid"]);
     expect(allowedReimburseActions(fin, "fin1", "approved")).toEqual([]);
+    expect(allowedReimburseActions(hr, "e1", "approved")).toEqual(["mark_paid"]);
+    expect(allowedReimburseActions(sh, "e1", "approved")).toEqual(["mark_paid"]);
+    expect(allowedReimburseActions(emp, "e2", "approved")).toEqual([]);
   });
 
   it("tolak per baris hanya oleh peninjau di tahapnya", () => {

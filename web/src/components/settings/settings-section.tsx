@@ -23,11 +23,11 @@ export function SettingsSection({ title, description, readOnly, dirty, onSave, o
           {description && <p className="mt-1 max-w-2xl text-sm text-fg-muted">{description}</p>}
         </div>
         {readOnly ? (
-          <span className="text-xs text-fg-subtle">Hanya lihat</span>
+          <span className="text-xs text-fg-subtle">View only</span>
         ) : (
           <div className="flex gap-2">
-            <Button variant="secondary" tone="neutral" size="small" disabled={!dirty} onClick={onReset}>Batalkan</Button>
-            <Button size="small" disabled={!dirty} onClick={onSave}>Simpan perubahan</Button>
+            <Button variant="secondary" tone="neutral" size="small" disabled={!dirty} onClick={onReset}>Discard</Button>
+            <Button size="small" disabled={!dirty} onClick={onSave}>Save changes</Button>
           </div>
         )}
       </div>

@@ -2,7 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { canAccess, featureForPath } from "@/lib/access";
+import { canAccess, featureForPath, isReleased } from "@/lib/access";
+import { ComingSoon } from "@/components/shell/coming-soon";
 import { useApp } from "@/store/app-provider";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
@@ -37,7 +38,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button type="button" aria-label="Tutup menu" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <button type="button" aria-label="Close menu" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <aside className="relative h-full w-64 border-r border-line bg-overlay backdrop-blur-xl">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
@@ -47,7 +48,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         <Topbar onMenu={() => setMobileOpen(true)} />
         <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-8 md:px-8">
           <PageTransition id={transitionKey(pathname)}>
-            {allowed ? children : <EmptyState title="Akses ditolak" description="Halaman ini tidak tersedia untuk role atau tim Anda." />}
+            {!allowed ? <EmptyState title="Access denied" description="This page isn't available for your role or team." />
+              : feature && !isReleased(feature) ? <ComingSoon />
+              : children}
           </PageTransition>
         </main>
       </div>

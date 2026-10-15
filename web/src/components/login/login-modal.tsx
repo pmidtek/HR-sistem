@@ -31,13 +31,14 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [remember, setRemember] = useState(true);
   const demo = ["u1", "u2", "u3", "u4", "u5", "u6"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     const found = state.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!found || password.length === 0) return setError("Email atau password salah.");
-    login(found.id);
+    if (!found || password.length === 0) return setError("Wrong email or password.");
+    login(found.id, remember);
   }
 
   return (
@@ -53,12 +54,12 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-m bg-[#1a1614] p-6 font-mono text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_-20px_rgba(0,0,0,0.8)]"
           >
-            <RadixDialog.Close className="absolute top-4 right-4 rounded-xxs p-1 text-white/50 hover:bg-white/5 hover:text-white" aria-label="Tutup">
+            <RadixDialog.Close className="absolute top-4 right-4 rounded-xxs p-1 text-white/50 hover:bg-white/5 hover:text-white" aria-label="Close">
               <X size={16} strokeWidth={1.5} />
             </RadixDialog.Close>
-            <RadixDialog.Title className="text-xl font-semibold tracking-[-0.02em]">{tab === "login" ? "Masuk ke akun Anda" : "Coba dengan akun demo"}</RadixDialog.Title>
+            <RadixDialog.Title className="text-xl font-semibold tracking-[-0.02em]">{tab === "login" ? "Sign in to your account" : "Try a demo account"}</RadixDialog.Title>
             <p className="mt-1 text-xs leading-relaxed text-white/50">
-              {tab === "login" ? "Pakai akun kantor. Akun dibuat oleh HR." : "Pilih salah satu peran untuk langsung masuk."}
+              {tab === "login" ? "Use your work account. Accounts are created by HR." : "Pick a role to sign in instantly."}
             </p>
 
             <div role="tablist" className="mt-5 inline-flex rounded-xs bg-white/[0.05] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
@@ -71,7 +72,7 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
                   onClick={() => onTabChange(t)}
                   className={cn("rounded-xxs px-3 py-1 text-xs transition-colors", tab === t ? "bg-[#0f0c0b] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" : "text-white/50 hover:text-white")}
                 >
-                  {t === "login" ? "Masuk" : "Akun demo"}
+                  {t === "login" ? "Sign in" : "Demo accounts"}
                 </button>
               ))}
             </div>
@@ -79,29 +80,33 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
             {tab === "login" ? (
               <div className="mt-6 flex flex-col gap-5">
                 <button type="button" disabled className="flex h-10 items-center justify-center gap-2.5 rounded-xxs text-xs text-white/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]">
-                  <MicrosoftLogo /> Masuk dengan Microsoft
-                  <span className="rounded-xxs bg-white/10 px-1.5 py-0.5 text-[10px] text-white/50">segera</span>
+                  <MicrosoftLogo /> Continue with Microsoft
+                  <span className="rounded-xxs bg-white/10 px-1.5 py-0.5 text-[10px] text-white/50">soon</span>
                 </button>
                 <div className="flex items-center gap-3 text-[10px] text-white/40">
-                  <span className="h-px flex-1 bg-white/10" /> ATAU <span className="h-px flex-1 bg-white/10" />
+                  <span className="h-px flex-1 bg-white/10" /> OR <span className="h-px flex-1 bg-white/10" />
                 </div>
                 <form onSubmit={onSubmit} className="flex flex-col gap-4">
                   <div>
                     <label htmlFor="login-email" className={label}>Email</label>
-                    <input id="login-email" type="email" autoComplete="email" placeholder="nama@perusahaan.co.id" value={email} onChange={(e) => { setEmail(e.target.value); setError(undefined); }} className={field} />
+                    <input id="login-email" type="email" autoComplete="email" placeholder="name@company.co.id" value={email} onChange={(e) => { setEmail(e.target.value); setError(undefined); }} className={field} />
                   </div>
                   <div>
                     <label htmlFor="login-password" className={label}>Password</label>
                     <div className="relative">
                       <input id="login-password" type={show ? "text" : "password"} autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setError(undefined); }} className={cn(field, "pr-10")} />
-                      <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? "Sembunyikan password" : "Tampilkan password"} className="absolute top-1/2 right-3 -translate-y-1/2 text-white/40 hover:text-white">
+                      <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? "Hide password" : "Show password"} className="absolute top-1/2 right-3 -translate-y-1/2 text-white/40 hover:text-white">
                         {show ? <EyeOff size={15} strokeWidth={1.5} /> : <Eye size={15} strokeWidth={1.5} />}
                       </button>
                     </div>
                     {error && <p className="mt-1.5 text-xs text-[#ff8a6b]">{error}</p>}
                   </div>
-                  <button type="submit" className="mt-1 flex h-10 items-center justify-center gap-2 rounded-xxs bg-white text-sm font-medium text-[#1a1614] transition-colors hover:bg-white/90">
-                    Masuk <ArrowRight size={15} strokeWidth={1.5} />
+                  <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70 select-none">
+                    <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-3.5 accent-[var(--brand)]" />
+                    Remember me
+                  </label>
+                  <button type="submit" className="flex h-10 items-center justify-center gap-2 rounded-xxs bg-white text-sm font-medium text-[#1a1614] transition-colors hover:bg-white/90">
+                    Sign in <ArrowRight size={15} strokeWidth={1.5} />
                   </button>
                 </form>
               </div>

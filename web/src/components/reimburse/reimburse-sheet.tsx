@@ -6,7 +6,7 @@ import {
   isBlankRow, normalizeProjectCode, parseUsdCents, usdToIdr, validateReimburseRow, type ReimburseRowInput, type RowErrors,
 } from "@/lib/calc/reimburse";
 import { parsePastedRows } from "@/lib/calc/reimburse-paste";
-import { formatRupiah } from "@/lib/format";
+import { formatDayShort, formatRupiah } from "@/lib/format";
 import type { Reimbursement } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
 import { reviseReimburseClaim, submitReimburseClaim } from "@/store/actions-reimburse";
@@ -17,6 +17,7 @@ import { Input } from "../ui/form";
 import { Icon } from "../ui/icon";
 import { formatUsd } from "./parts";
 import { SheetRowCells, type SheetRow } from "./sheet-row";
+import { usePayDate } from "./use-pay-date";
 
 let seq = 0;
 const fromInput = (r: ReimburseRowInput): SheetRow => ({
@@ -32,7 +33,8 @@ const toInput = (r: SheetRow): ReimburseRowInput => ({
 export function ReimburseSheet({ onClose, editing }: { onClose: () => void; editing?: Reimbursement }) {
   const { state, user, actor, today, run } = useAuthed();
   const codeListId = useId();
-  const rate = state.settings.payroll.usdRate;
+  const payDate = usePayDate();
+  const rate = state.settings.reimburse.usdRate;
   const [title, setTitle] = useState(editing?.title ?? "");
   const [rows, setRows] = useState<SheetRow[]>(() => (editing ? editing.items.map(fromInput) : [blankRow(today), blankRow(today), blankRow(today)]));
   const [errors, setErrors] = useState<Record<number, RowErrors>>({});
@@ -88,26 +90,26 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
     if (filled.length === 0 || Object.keys(errs).length > 0) return;
     const input = filled.map(toInput);
     const ok = editing
-      ? run((s) => reviseReimburseClaim(s, editing.id, actor, title, input, today), `${editing.number} dikirim ulang ke Finance.`)
-      : run((s) => submitReimburseClaim(s, user.id, title, input, today), `Reimburse ${filled.length} baris terkirim ke Finance.`);
+      ? run((s) => reviseReimburseClaim(s, editing.id, actor, title, input, today), `${editing.number} resubmitted to Finance.`)
+      : run((s) => submitReimburseClaim(s, user.id, title, input, today), `Claim with ${filled.length} item(s) sent to Finance.`);
     if (ok) onClose();
   }
 
   return (
-    <Card padding="lg" className="mb-8 flex flex-col gap-4">
+    <Card padding="lg" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-lg font-medium">{editing ? `Perbaiki ${editing.number}` : "Ajukan reimburse"}</h2>
-          <p className="text-sm text-fg-muted">Satu baris satu transaksi. Semua baris diajukan dan dibayar sebagai satu grup.</p>
+          <h2 className="font-display text-lg font-medium">{editing ? `Fix ${editing.number}` : "New reimbursement"}</h2>
+          <p className="text-sm text-fg-muted">One row per transaction. All rows are submitted and paid together as one claim.</p>
         </div>
         <div className="w-full max-w-sm">
-          <Input label="Judul pengajuan (opsional)" placeholder="Mis. Perjalanan IFT 8–11 Sep" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input label="Claim title (optional)" placeholder="e.g. IFT trip 8–11 Sep" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
       </div>
 
       <p className="flex items-center gap-2 rounded-xs bg-sunken px-3 py-2 text-xs text-fg-muted">
         <Icon icon={ClipboardPaste} size={14} />
-        {pasted > 0 ? `${pasted} baris ditempel dari Excel. Cek kategori dan upload buktinya.` : "Punya rekap di Excel? Copy baris Date sampai Cost (IDR), lalu paste di kolom Description."}
+        {pasted > 0 ? `${pasted} rows pasted from Excel. Check the categories and upload receipts.` : "Have it in Excel? Copy the rows from Date to Cost (IDR) and paste into the Description column."}
       </p>
 
       <datalist id={codeListId}>
@@ -123,10 +125,10 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
               <th className="w-40 px-3 py-2 font-normal">Date</th>
               <th className="min-w-56 px-3 py-2 font-normal">Description</th>
               <th className="w-44 px-3 py-2 font-normal">Category</th>
-              <th className="w-32 px-3 py-2 font-normal">Code</th>
+              <th className="w-36 px-3 py-2 font-normal">Code</th>
               <th className="w-32 px-3 py-2 text-right font-normal">Cost (USD)</th>
               <th className="w-36 px-3 py-2 text-right font-normal">Cost (IDR)</th>
-              <th className="w-44 px-3 py-2 font-normal">Bukti</th>
+              <th className="w-44 px-3 py-2 font-normal">Receipts</th>
               <th className="w-20 px-2 py-2" />
             </tr>
           </thead>
@@ -143,12 +145,12 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
             <tr className="bg-sunken">
               <td colSpan={5} className="p-0">
                 <button type="button" onClick={addRow} className="flex h-10 w-full items-center gap-1.5 px-3 text-sm text-fg-brand hover:bg-hover">
-                  <Icon icon={Plus} size={14} /> Tambah baris
+                  <Icon icon={Plus} size={14} /> Add row
                 </button>
               </td>
               <td className="px-3 text-right font-mono text-xs text-fg-muted">{totalUsd > 0 ? formatUsd(totalUsd) : "-"}</td>
               <td className="px-3 text-right font-mono text-sm">{formatRupiah(total)}</td>
-              <td colSpan={2} className="px-3 text-xs text-fg-subtle">{filled.length} baris terisi</td>
+              <td colSpan={2} className="px-3 text-xs text-fg-subtle">{filled.length} filled</td>
             </tr>
           </tfoot>
         </table>
@@ -157,12 +159,12 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-fg-subtle">
           {errorCount > 0
-            ? <span className="text-fg-danger">{errorCount} baris belum lengkap. Arahkan kursor ke kolom merah untuk lihat alasannya.</span>
-            : `Code boleh dikosongkan atau isi OTHERS. Kolom IDR terisi otomatis dari USD (kurs ${formatRupiah(rate)}), bisa diubah sesuai tagihan.`}
+            ? <span className="text-fg-danger">{errorCount} row(s) incomplete. Hover a red cell to see why.</span>
+            : <>Code is optional (or use OTHERS). IDR is pre-filled from USD at {formatRupiah(rate)}/$1. Submit today → estimated payment <span className="text-fg">{formatDayShort(payDate(today))}</span>.</>}
         </p>
         <div className="flex gap-2">
-          <Button variant="secondary" tone="neutral" onClick={onClose}>Batal</Button>
-          <Button onClick={submit} disabled={filled.length === 0}>{editing ? "Kirim ulang" : "Ajukan"}{filled.length > 0 ? ` · ${formatRupiah(total)}` : ""}</Button>
+          <Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={filled.length === 0}>{editing ? "Resubmit" : "Submit"}{filled.length > 0 ? ` · ${formatRupiah(total)}` : ""}</Button>
         </div>
       </div>
     </Card>

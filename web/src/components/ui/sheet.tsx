@@ -35,7 +35,7 @@ export function Sheet({ open, onOpenChange, title, header, children, footer }: S
               <RadixDialog.Title className="sr-only">{title}</RadixDialog.Title>
               <div className="min-w-0 flex-1">{header}</div>
               <RadixDialog.Close asChild>
-                <IconButton label="Tutup" size="small">
+                <IconButton label="Close" size="small">
                   <Icon icon={X} />
                 </IconButton>
               </RadixDialog.Close>

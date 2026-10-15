@@ -22,7 +22,7 @@ type Props = {
 };
 
 /** Popover pilih banyak dengan pencarian (assignee, label, dependensi, peserta). */
-export function MultiSelect({ options, value, onChange, children, searchPlaceholder = "Cari…", emptyText = "Tidak ditemukan.", disabled, align = "start" }: Props) {
+export function MultiSelect({ options, value, onChange, children, searchPlaceholder = "Search…", emptyText = "No results.", disabled, align = "start" }: Props) {
   const [open, setOpen] = useState(false);
   const toggle = (v: string) => onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
 

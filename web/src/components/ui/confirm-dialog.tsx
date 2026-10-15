@@ -18,7 +18,7 @@ type Props = {
 };
 
 /** Konfirmasi aksi berbahaya (hapus). */
-export function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel = "Hapus", typeToConfirm, onConfirm, children }: Props) {
+export function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel = "Delete", typeToConfirm, onConfirm, children }: Props) {
   const [typed, setTyped] = useState("");
   const ready = !typeToConfirm || typed === typeToConfirm;
   return (
@@ -32,7 +32,7 @@ export function ConfirmDialog({ open, onOpenChange, title, description, confirmL
       description={description}
       footer={
         <>
-          <Button variant="secondary" tone="neutral" onClick={() => onOpenChange(false)}>Batal</Button>
+          <Button variant="secondary" tone="neutral" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button tone="danger" disabled={!ready} onClick={onConfirm}>{confirmLabel}</Button>
         </>
       }
@@ -40,7 +40,7 @@ export function ConfirmDialog({ open, onOpenChange, title, description, confirmL
       <div className="flex flex-col gap-4">
         {children}
         {typeToConfirm && (
-          <Input label={`Ketik "${typeToConfirm}" untuk konfirmasi`} value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+          <Input label={`Type "${typeToConfirm}" to confirm`} value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
         )}
       </div>
     </Dialog>

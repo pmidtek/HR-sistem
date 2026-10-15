@@ -31,7 +31,7 @@ export default function LoginPage() {
       <header className="relative flex items-center justify-between px-6 py-5 sm:px-10">
         <IdtekLogo tone="light" />
         <button type="button" onClick={() => setModal("login")} className="rounded-xxs px-3 py-1.5 text-xs text-white/75 hover:bg-white/10 hover:text-white">
-          Masuk
+          Sign in
         </button>
       </header>
 
@@ -47,18 +47,18 @@ export default function LoginPage() {
           idtek <span className="font-normal text-[#f4a261]">dashboard</span>
         </motion.h1>
         <motion.p {...rise(0.18)} className="mt-4 text-sm text-white/65 sm:text-base">
-          Timesheet, cuti, reimburse, sampai gaji.
+          Reimbursement, timesheet, leave, and payroll in one place.
         </motion.p>
         <motion.div {...rise(0.26)} className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button type="button" onClick={() => setModal("login")} className="h-10 rounded-xxs bg-white px-7 text-sm font-medium text-[#1a1614] shadow-[0_10px_30px_-10px_rgba(243,106,29,0.6)] transition-colors hover:bg-white/90">
-            Masuk
+            Sign in
           </button>
           <button type="button" onClick={() => setModal("demo")} className="h-10 rounded-xxs bg-white/[0.06] px-7 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] backdrop-blur-md transition-colors hover:bg-white/[0.12]">
-            Coba akun demo
+            Try a demo account
           </button>
         </motion.div>
         <motion.p {...rise(0.32)} className="mt-5 text-xs text-white/40">
-          Akun dibuat oleh HR. Belum punya? Hubungi HR.
+          Accounts are created by HR. Don&apos;t have one? Contact HR.
         </motion.p>
       </main>
 

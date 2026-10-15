@@ -127,7 +127,7 @@ export function ReimburseQueue({ onlyPending }: QueueProps) {
   const open = openId ? state.reimbursements.find((r) => r.id === openId) : undefined;
   return (
     <>
-      <ClaimTable list={rows} onOpen={setOpenId} showOwner empty="Tidak ada reimburse yang perlu ditinjau" />
+      <ClaimTable list={rows} onOpen={setOpenId} showOwner empty="Nothing to review" />
       {open && <ClaimDetail claim={open} onClose={() => setOpenId(null)} onPay={setPaying} />}
       {paying && <PayDialog ids={paying} onClose={() => setPaying(null)} />}
     </>

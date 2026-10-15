@@ -62,11 +62,11 @@ export const payslips: Payslip[] = [
 ];
 
 export const notifications: Notification[] = [
-  { id: "n1", userId: "u2", title: "Pengajuan cuti baru", body: "Budi Santoso mengajukan Cuti Tahunan 19–21 Okt.", href: "/approvals", createdAt: "2026-10-03T10:12:00+07:00", read: false },
-  { id: "n2", userId: "u2", title: "Pengajuan lembur baru", body: "Fajar Nugroho mengajukan lembur 30 Sep (2 jam).", href: "/approvals", createdAt: "2026-10-01T09:00:00+07:00", read: false },
-  { id: "n3", userId: "u1", title: "Menunggu keputusan Anda", body: "Cuti Lina Kusuma diteruskan oleh HR.", href: "/approvals", createdAt: "2026-10-02T14:30:00+07:00", read: false },
-  { id: "n4", userId: "u4", title: "Lembur disetujui", body: "Lembur 29 Sep (2j 30m) disetujui oleh Rina Wijaya.", href: "/overtime", createdAt: "2026-10-01T08:00:00+07:00", read: false },
-  { id: "n5", userId: "u4", title: "Slip gaji tersedia", body: "Slip gaji September 2026 sudah bisa diunduh.", href: "/payslips", createdAt: "2026-09-27T10:00:00+07:00", read: true },
-  { id: "n6", userId: "u3", title: "Reimburse baru", body: "Andi Pratama mengajukan reimburse Rp185.000.", href: "/approvals", createdAt: "2026-09-30T18:00:00+07:00", read: false },
-  { id: "n7", userId: "u7", title: "Reimburse perlu revisi", body: "Foto struk tol buram, mohon upload ulang.", href: "/reimbursements", createdAt: "2026-09-29T10:00:00+07:00", read: false },
+  { id: "n1", userId: "u3", title: "New reimbursement", body: "Budi Santoso submitted RB-2610-001 (2 items, Rp139.850).", href: "/approvals", createdAt: "2026-10-06T19:00:00+07:00", read: false },
+  { id: "n2", userId: "u1", title: "Reimbursement: Waiting for Stakeholder approval", body: "RB-2610-002 by Lina Kusuma is now \"Waiting for Stakeholder approval\" (Rp556.000).", href: "/approvals", createdAt: "2026-10-05T10:00:00+07:00", read: false },
+  { id: "n3", userId: "u9", title: "Some items in your reimbursement were declined", body: "RB-2610-002 was reviewed by Dewi Lestari and forwarded for Stakeholder approval (Rp556.000). 1 item(s) declined: Cigarettes for guests (Rp85.000): Cigarettes are not a reimbursable entertainment expense.", href: "/reimbursements?claim=rb2", createdAt: "2026-10-05T10:00:00+07:00", read: false },
+  { id: "n4", userId: "u5", title: "Your reimbursement was approved", body: "RB-2610-003 was approved by Rina Wijaya: Rp383.000 will be paid, estimated Wed, 7 Oct.", href: "/reimbursements?claim=rb14", createdAt: "2026-10-05T21:00:00+07:00", read: false },
+  { id: "n5", userId: "u7", title: "Your reimbursement needs revision", body: "Dewi Lestari asked you to fix RB-2609-006. Reason: The toll receipt photo is blurry, please re-upload. Open the claim and click \"Fix & resubmit\".", href: "/reimbursements?claim=rb3", createdAt: "2026-09-29T10:00:00+07:00", read: false },
+  { id: "n6", userId: "u6", title: "Your reimbursement was paid", body: "RB-2609-002 (Rp1.930.000) has been paid via payroll. Payment proof is attached.", href: "/reimbursements?claim=rb7", createdAt: "2026-09-25T10:00:00+07:00", read: true },
+  { id: "n7", userId: "u6", title: "Your reimbursement was rejected", body: "RB-2606-002 was rejected by Dewi Lestari. Reason: Already covered by the client per contract.", href: "/reimbursements?claim=rb11", createdAt: "2026-06-12T10:00:00+07:00", read: true },
 ];

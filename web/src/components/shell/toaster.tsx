@@ -35,7 +35,7 @@ export function Toaster() {
               <Icon icon={toneIcon[t.tone]} size={18} />
             </motion.span>
             <p className="flex-1 text-sm text-fg">{t.title}</p>
-            <button type="button" aria-label="Tutup" onClick={() => dismissToast(t.id)} className="text-fg-subtle hover:text-fg">
+            <button type="button" aria-label="Close" onClick={() => dismissToast(t.id)} className="text-fg-subtle hover:text-fg">
               <Icon icon={X} size={14} />
             </button>
           </motion.div>

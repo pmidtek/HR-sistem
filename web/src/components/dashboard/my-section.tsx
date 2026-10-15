@@ -11,7 +11,6 @@ import { MyTasks } from "../projects/my-tasks";
 import { ApprovalBadge, ReimburseBadge } from "../status-badge";
 import { Card, Stat } from "../ui/display";
 import { CountUp, Stagger, StaggerItem } from "../ui/motion";
-import { ReimburseMineCard } from "./reimburse-section";
 import { MiniList, Panel } from "./widgets";
 
 /** Ringkasan pribadi: dipakai semua role (pegawai melihat ini sebagai dashboard utama). */
@@ -41,7 +40,6 @@ export function MySection({ showTasks, delay = 0 }: { showTasks: boolean; delay?
         </Card>
       </StaggerItem>
       <div className="grid gap-4 lg:grid-cols-2">
-        <ReimburseMineCard />
         <Panel title="Status pengajuan saya">
           <MiniList items={pending} empty="Tidak ada pengajuan yang sedang berjalan." />
         </Panel>

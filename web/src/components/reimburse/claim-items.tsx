@@ -6,7 +6,8 @@ import { formatDate, formatRupiah } from "@/lib/format";
 import type { ReimbursementItem } from "@/lib/types";
 import { useApp } from "@/store/app-provider";
 import { useLookups } from "../hooks";
-import { FileChips, formatUsd, ProjectCode } from "./parts";
+import { FileChips } from "./file-viewer";
+import { formatUsd, ProjectCode } from "./parts";
 
 type Props = {
   items: ReimbursementItem[];
@@ -42,18 +43,18 @@ export function ClaimItems({ items, onDecline, onRestore }: Props) {
               <FileChips files={i.files} />
               {!i.declined && onDecline && (
                 <button type="button" onClick={() => onDecline(i)} className="inline-flex items-center gap-1 rounded-xxs px-1.5 py-1 text-xs text-fg-danger hover:bg-hover">
-                  <XCircle size={13} strokeWidth={1.5} /> Tolak baris ini
+                  <XCircle size={13} strokeWidth={1.5} /> Decline item
                 </button>
               )}
               {i.declined && onRestore && (
                 <button type="button" onClick={() => onRestore(i)} className="inline-flex items-center gap-1 rounded-xxs px-1.5 py-1 text-xs text-fg-muted hover:bg-hover">
-                  <RotateCcw size={13} strokeWidth={1.5} /> Pulihkan
+                  <RotateCcw size={13} strokeWidth={1.5} /> Restore
                 </button>
               )}
             </div>
             {i.declined && (
               <p className="rounded-xxs bg-danger-subtle px-2 py-1 text-xs text-fg-danger">
-                Ditolak oleh {userName(i.declined.byUserId)}: {i.declined.note}
+                Declined by {userName(i.declined.byUserId)}: {i.declined.note}
               </p>
             )}
           </div>

@@ -26,8 +26,6 @@ export type PayrollSettings = {
   periodMode: PayrollPeriodMode;
   cutoffDay: number;
   reimburseViaPayroll: boolean;
-  /** Kurs USD → Rupiah untuk mengisi otomatis kolom Rupiah di form reimburse. */
-  usdRate: number;
   payslipPasswordProtected: boolean;
 };
 
@@ -52,6 +50,15 @@ export type TerRate = {
   rateBps: number;
 };
 
+export type ReimburseSettings = {
+  /** Kurs USD → Rupiah untuk mengisi otomatis kolom IDR di form reimburse. */
+  usdRate: number;
+  /** Hari bayar reimburse (0 = Minggu … 6 = Sabtu), mis. Rabu & Jumat = [3, 5]. */
+  payDays: number[];
+  /** Jarak minimal (hari) dari pengajuan ke hari bayar. Senin + 2 = Rabu, Rabu + 2 = Jumat. */
+  leadDays: number;
+};
+
 export type CompanySettings = {
   name: string;
   address: string;
@@ -62,6 +69,7 @@ export type AppSettings = {
   work: WorkSettings;
   overtime: OvertimeSettings;
   payroll: PayrollSettings;
+  reimburse: ReimburseSettings;
   bpjs: BpjsRate[];
   ter: TerRate[];
   company: CompanySettings;

@@ -19,14 +19,14 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-transparent px-4 backdrop-blur-[12px] md:px-6">
-      <IconButton label="Buka menu" className="lg:hidden" onClick={onMenu}>
+      <IconButton label="Open menu" className="lg:hidden" onClick={onMenu}>
         <Icon icon={Menu} size={18} />
       </IconButton>
       <div className="hidden md:block">
-        <Eyebrow tone="success">Data dummy · {formatDate(today)}</Eyebrow>
+        <Eyebrow tone="success">Demo data · {formatDate(today)}</Eyebrow>
       </div>
       <div className="flex-1" />
-      <IconButton label={theme === "dark" ? "Mode terang" : "Mode gelap"} onClick={toggleTheme}>
+      <IconButton label={theme === "dark" ? "Light mode" : "Dark mode"} onClick={toggleTheme}>
         <Icon icon={theme === "dark" ? Sun : Moon} size={18} />
       </IconButton>
       <NotificationBell />
@@ -39,7 +39,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           </p>
         </div>
         <IconButton
-          label="Keluar"
+          label="Sign out"
           size="small"
           onClick={() => {
             logout();
@@ -63,7 +63,7 @@ function NotificationBell() {
       <Popover.Trigger asChild>
         <button
           type="button"
-          aria-label="Notifikasi"
+          aria-label="Notifications"
           className="relative inline-flex size-10 items-center justify-center rounded-xxs text-fg-muted hover:bg-hover hover:text-fg"
         >
           <Icon icon={Bell} size={18} />
@@ -81,19 +81,19 @@ function NotificationBell() {
           className="z-50 w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-s bg-overlay backdrop-blur-xl shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-lg)]"
         >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <p className="font-display text-sm font-medium">Notifikasi</p>
+            <p className="font-display text-sm font-medium">Notifications</p>
             {unread > 0 && (
               <button
                 type="button"
                 className="text-xs text-fg-brand hover:underline"
                 onClick={() => run((s) => markNotificationsRead(s, user.id))}
               >
-                Tandai semua dibaca
+                Mark all as read
               </button>
             )}
           </div>
           <div className="max-h-[420px] overflow-y-auto">
-            {mine.length === 0 && <p className="px-4 py-8 text-center text-xs text-fg-muted">Belum ada notifikasi.</p>}
+            {mine.length === 0 && <p className="px-4 py-8 text-center text-xs text-fg-muted">No notifications yet.</p>}
             {mine.map((n) => (
               <Popover.Close asChild key={n.id}>
                 <Link

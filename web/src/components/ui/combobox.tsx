@@ -28,8 +28,8 @@ export function Combobox({
   value,
   onChange,
   options,
-  placeholder = "Pilih…",
-  searchPlaceholder = "Cari…",
+  placeholder = "Select…",
+  searchPlaceholder = "Search…",
   error,
   triggerClassName,
 }: ComboboxProps) {
@@ -73,7 +73,7 @@ export function Combobox({
                 />
               </div>
               <Command.List className="max-h-64 overflow-y-auto p-1">
-                <Command.Empty className="px-3 py-6 text-center text-xs text-fg-muted">Tidak ditemukan.</Command.Empty>
+                <Command.Empty className="px-3 py-6 text-center text-xs text-fg-muted">No results.</Command.Empty>
                 {options.map((o) => (
                   <Command.Item
                     key={o.value}

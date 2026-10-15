@@ -35,7 +35,7 @@ function MasterList<K extends Key>({ storeKey, title, description, readOnly, hea
     <SettingsSection
       title={title} description={description} readOnly={readOnly} dirty={dirty}
       onReset={() => setRows(state[storeKey] as Item[])}
-      onSave={() => run((s) => saveMaster(s, storeKey, rows as DataState[K]), `${title} disimpan.`)}
+      onSave={() => run((s) => saveMaster(s, storeKey, rows as DataState[K]), `${title} saved.`)}
     >
       <Table>
         <thead><tr>{headers.map((h) => <Th key={h}>{h}</Th>)}<Th /></tr></thead>
@@ -44,7 +44,7 @@ function MasterList<K extends Key>({ storeKey, title, description, readOnly, hea
             <Tr key={i}>
               {renderRow(item, (patch) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)))).map((c, ci) => <Td key={ci}>{c}</Td>)}
               <Td className="text-right">
-                {!readOnly && <IconButton label="Hapus" size="small" onClick={() => setRows((r) => r.filter((_, j) => j !== i))}><Icon icon={Trash2} size={14} /></IconButton>}
+                {!readOnly && <IconButton label="Remove" size="small" onClick={() => setRows((r) => r.filter((_, j) => j !== i))}><Icon icon={Trash2} size={14} /></IconButton>}
               </Td>
             </Tr>
           ))}
@@ -52,7 +52,7 @@ function MasterList<K extends Key>({ storeKey, title, description, readOnly, hea
       </Table>
       {!readOnly && (
         <div>
-          <Button size="small" variant="secondary" tone="neutral" iconLeft={<Icon icon={Plus} size={14} />} onClick={() => setRows((r) => [...r, blank()])}>Tambah</Button>
+          <Button size="small" variant="secondary" tone="neutral" iconLeft={<Icon icon={Plus} size={14} />} onClick={() => setRows((r) => [...r, blank()])}>Add</Button>
         </div>
       )}
     </SettingsSection>
@@ -63,8 +63,8 @@ const sm = "h-8 text-xs";
 
 export function HolidayList({ readOnly }: { readOnly: boolean }) {
   return (
-    <MasterList<"holidays"> storeKey="holidays" title="Kalender libur" description="Libur nasional tidak dihitung sebagai hari kerja (cuti & payroll) dan kerja di hari ini dihitung lembur hari libur." readOnly={readOnly}
-      headers={["Tanggal", "Nama libur"]} blank={(): Holiday => ({ date: "", name: "" })}
+    <MasterList<"holidays"> storeKey="holidays" title="Holidays" description="Public holidays are not working days. Reimbursement pay days that fall on a holiday move to the next pay day." readOnly={readOnly}
+      headers={["Date", "Holiday"]} blank={(): Holiday => ({ date: "", name: "" })}
       renderRow={(h, up) => [
         <Input key="d" size="small" className={sm} type="date" value={h.date} onChange={(e) => up({ date: e.target.value })} title={h.date ? formatDate(h.date) : ""} />,
         <Input key="n" size="small" className={sm} value={h.name} onChange={(e) => up({ name: e.target.value })} />,
@@ -85,19 +85,19 @@ export function ActivityList({ readOnly }: { readOnly: boolean }) {
 
 export function CategoryList({ readOnly }: { readOnly: boolean }) {
   return (
-    <MasterList<"reimbursementCategories"> storeKey="reimbursementCategories" title="Kategori reimburse" readOnly={readOnly}
-      headers={["Nama kategori"]} blank={(): ReimbursementCategory => ({ id: newId("cat"), name: "" })}
+    <MasterList<"reimbursementCategories"> storeKey="reimbursementCategories" title="Reimbursement categories" readOnly={readOnly}
+      headers={["Category name"]} blank={(): ReimbursementCategory => ({ id: newId("cat"), name: "" })}
       renderRow={(c, up) => [<Input key="n" size="small" className={sm} value={c.name} onChange={(e) => up({ name: e.target.value })} />]} />
   );
 }
 
 export function TeamList({ readOnly }: { readOnly: boolean }) {
   return (
-    <MasterList<"teams"> storeKey="teams" title="Tim" description="Tim Sales mengakses Sales Pipeline; tim delivery mengakses Project Board." readOnly={readOnly}
-      headers={["Nama tim", "Jenis"]} blank={(): Team => ({ id: newId("t"), name: "", kind: "delivery" })}
+    <MasterList<"teams"> storeKey="teams" title="Teams" description="Used to group employees in recaps." readOnly={readOnly}
+      headers={["Team name", "Type"]} blank={(): Team => ({ id: newId("t"), name: "", kind: "delivery" })}
       renderRow={(t, up) => [
         <Input key="n" size="small" className={sm} value={t.name} onChange={(e) => up({ name: e.target.value })} />,
-        <Select key="k" className={sm} value={t.kind} onChange={(e) => up({ kind: e.target.value as Team["kind"] })} options={[{ value: "sales", label: "Sales" }, { value: "delivery", label: "Delivery" }, { value: "support", label: "Pendukung" }]} />,
+        <Select key="k" className={sm} value={t.kind} onChange={(e) => up({ kind: e.target.value as Team["kind"] })} options={[{ value: "sales", label: "Sales" }, { value: "delivery", label: "Delivery" }, { value: "support", label: "Support" }]} />,
       ]} />
   );
 }

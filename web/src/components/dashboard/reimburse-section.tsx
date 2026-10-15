@@ -1,99 +1,128 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { allowedReimburseActions } from "@/lib/calc/approval";
-import { claimTotal, stageOf, stageTotals } from "@/lib/calc/reimburse";
+import { claimTotal, inPeriod, stageOf, type PeriodFilter } from "@/lib/calc/reimburse";
 import { formatDate, formatPeriod, formatRupiah } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
 import { BarChart } from "../charts/bar-chart";
 import { useLookups } from "../hooks";
 import { stageMeta } from "../reimburse/parts";
+import { defaultPeriod, PeriodFilterControl, periodLabel } from "../reimburse/period-filter";
 import { lastMonths, monthlyByPayment, shortRp } from "../reimburse/recap-charts";
 import { StatusFlow } from "../reimburse/status-flow";
+import { usePayDate } from "../reimburse/use-pay-date";
+import { CollapsibleSection } from "../ui/collapsible-section";
 import { Badge } from "../ui/display";
-import { Stagger, StaggerItem } from "../ui/motion";
-import { MiniList, Panel } from "./widgets";
+import { Stagger } from "../ui/motion";
+import { ActionTile, MiniList, Panel } from "./widgets";
 
-/** Finance & Stakeholder: alur reimburse perusahaan, antrian tindakan, dan tren. */
+/** Finance, HR & Stakeholder: antrian tindakan, alur reimburse perusahaan per periode, dan tren. */
 export function ReimburseCompanySection() {
   const { state, actor, today } = useAuthed();
   const { userName } = useLookups();
+  const payDate = usePayDate();
+  const [period, setPeriod] = useState<PeriodFilter>(() => defaultPeriod(today));
   const all = state.reimbursements;
-  const mine = all.filter((r) => {
-    const acts = allowedReimburseActions(actor, r.userId, r.status).filter((a) => a !== "resubmit");
-    return acts.length > 0;
-  }).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+  const years = [...new Set(all.map((r) => Number(r.submittedAt.slice(0, 4))))];
+  const inRange = all.filter((r) => inPeriod(r.submittedAt, period));
+  const acts = (r: (typeof all)[number]) => allowedReimburseActions(actor, r.userId, r.status);
+  const toReview = all.filter((r) => acts(r).some((a) => a === "forward" || a === "approve"));
+  const toPay = all.filter((r) => acts(r).includes("mark_paid"));
+  const overdue = toPay.filter((r) => payDate(r.submittedAt) < today);
+  const queue = [...toReview, ...toPay].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
   const months = lastMonths(today);
   const data = monthlyByPayment(all, months);
-  const paidSeries = { key: "paid", label: "Sudah dibayar", color: stageMeta.paid.color };
-  const unpaidSeries = { key: "unpaid", label: "Belum dibayar", color: stageMeta.unpaid.color };
+  const href = "/reimburse-recap";
 
   return (
-    <Stagger className="flex flex-col gap-4">
-      <StaggerItem>
-        <StatusFlow list={all} title="Reimburse perusahaan · total diajukan" />
-      </StaggerItem>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <Panel title="Perlu tindakan Anda" aside={<Link href={actor.role === "finance" ? "/reimburse-recap" : "/approvals"} className="text-xs text-fg-brand hover:underline">Buka semua</Link>}>
-          <MiniList
-            empty="Tidak ada reimburse yang menunggu Anda."
-            items={mine.slice(0, 6).map((r) => {
-              const s = stageOf(r.status);
-              return {
-                key: r.id,
-                left: (
-                  <Link href={actor.role === "finance" ? "/reimburse-recap" : "/approvals"} className="hover:text-fg-brand">
-                    <span className="font-mono text-xs text-fg-subtle">{r.number}</span> {userName(r.userId)} · {formatRupiah(claimTotal(r))}
-                  </Link>
-                ),
-                right: <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full" style={{ background: stageMeta[s].color }} />{s === "unpaid" ? "Siap dibayar" : stageMeta[s].short}</span>,
-              };
-            })}
-          />
-        </Panel>
-        <Panel title="Dibayar vs belum dibayar · 6 bulan">
-          <BarChart
-            height={180}
-            categories={months.map((m) => formatPeriod(m).slice(0, 3))}
-            yFormat={shortRp}
-            series={[{ ...paidSeries, values: data.map((d) => d.paid) }, { ...unpaidSeries, values: data.map((d) => d.unpaid) }]}
-          />
-        </Panel>
-      </div>
-    </Stagger>
+    <div className="flex flex-col gap-10">
+      <CollapsibleSection id="dash-action" title="Needs your action" summary={`${toReview.length + toPay.length} item(s)`}>
+        <Stagger as="section" className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <ActionTile label="To review" count={toReview.length} href="/approvals" />
+          <ActionTile label="Ready to pay" count={toPay.length} href={href} />
+          <ActionTile label="Overdue payments" count={overdue.length} href={href} />
+        </Stagger>
+      </CollapsibleSection>
+
+      <CollapsibleSection id="dash-overview" title="Reimbursement overview" summary={periodLabel(period)} actions={<PeriodFilterControl value={period} onChange={setPeriod} today={today} years={years} />}>
+        <StatusFlow list={inRange} title="Total submitted" />
+      </CollapsibleSection>
+
+      <CollapsibleSection id="dash-queue" title="Queue & trend" summary={`${queue.length} in your queue`}>
+        <Stagger className="flex flex-col gap-4">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <Panel title="Your queue" aside={<Link href={href} className="text-xs text-fg-brand hover:underline">Open recap</Link>}>
+              <MiniList
+                empty="Nothing waiting for you."
+                items={queue.slice(0, 6).map((r) => {
+                  const s = stageOf(r.status);
+                  const late = s === "unpaid" && payDate(r.submittedAt) < today;
+                  return {
+                    key: r.id,
+                    left: (
+                      <Link href={s === "unpaid" ? href : "/approvals"} className="hover:text-fg-brand">
+                        <span className="font-mono text-xs text-fg-subtle">{r.number}</span> {userName(r.userId)} · {formatRupiah(claimTotal(r))}
+                      </Link>
+                    ),
+                    right: late ? <Badge tone="danger">Overdue</Badge> : (
+                      <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full" style={{ background: stageMeta[s].color }} />{stageMeta[s].short}</span>
+                    ),
+                  };
+                })}
+              />
+            </Panel>
+            <Panel title="Paid vs not paid · last 6 months">
+              <BarChart
+                height={180}
+                categories={months.map((m) => formatPeriod(m).slice(0, 3))}
+                yFormat={shortRp}
+                series={[
+                  { key: "paid", label: "Paid", color: stageMeta.paid.color, values: data.map((d) => d.paid) },
+                  { key: "unpaid", label: "Not paid", color: stageMeta.unpaid.color, values: data.map((d) => d.unpaid) },
+                ]}
+              />
+            </Panel>
+          </div>
+        </Stagger>
+      </CollapsibleSection>
+    </div>
   );
 }
 
-/** Pegawai: ringkasan reimburse sendiri. */
-export function ReimburseMineCard() {
-  const { state, user } = useAuthed();
+/** Pegawai: ringkasan reimburse sendiri per periode. */
+export function ReimburseMineSection() {
+  const { state, user, today } = useAuthed();
+  const payDate = usePayDate();
+  const [period, setPeriod] = useState<PeriodFilter>(() => defaultPeriod(today));
   const mine = state.reimbursements.filter((r) => r.userId === user.id);
-  const t = stageTotals(mine);
-  const inProcess = t.finance.amount + t.stakeholder.amount + t.revision.amount;
-  const last = [...mine].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 3);
-  const rows = [
-    { label: "Dalam proses", amount: inProcess, color: stageMeta.finance.color },
-    { label: "Siap dibayar", amount: t.unpaid.amount, color: stageMeta.unpaid.color },
-    { label: "Sudah dibayar", amount: t.paid.amount, color: stageMeta.paid.color },
-  ];
+  const years = [...new Set(mine.map((r) => Number(r.submittedAt.slice(0, 4))))];
+  const inRange = mine.filter((r) => inPeriod(r.submittedAt, period));
+  const recent = [...mine].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 5);
+
   return (
-    <Panel title="Reimburse saya" aside={<Link href="/reimbursements" className="text-xs text-fg-brand hover:underline">Ajukan / lihat</Link>}>
-      <div className="grid grid-cols-3 gap-3">
-        {rows.map((r) => (
-          <div key={r.label} className="flex flex-col gap-1">
-            <span className="flex items-center gap-1.5 text-xs text-fg-muted"><span className="size-2 rounded-full" style={{ background: r.color }} />{r.label}</span>
-            <span className="font-mono text-sm">{formatRupiah(r.amount)}</span>
-          </div>
-        ))}
-      </div>
-      <MiniList
-        empty="Belum ada pengajuan."
-        items={last.map((r) => ({
-          key: r.id,
-          left: <><span className="font-mono text-xs text-fg-subtle">{r.number}</span> {r.title}</>,
-          right: r.status === "rejected" ? <Badge tone="danger">Ditolak</Badge> : r.paidAt ? `Dibayar ${formatDate(r.paidAt)}` : stageMeta[stageOf(r.status)].short,
-        }))}
-      />
-    </Panel>
+    <div className="flex flex-col gap-10">
+      <CollapsibleSection id="dash-mine" title="My reimbursements" summary={periodLabel(period)} actions={<PeriodFilterControl value={period} onChange={setPeriod} today={today} years={years} />}>
+        <StatusFlow list={inRange} title="Total submitted" />
+      </CollapsibleSection>
+      <CollapsibleSection id="dash-recent" title="Recent claims" summary={`${recent.length} latest`}>
+      <Stagger>
+        <Panel title="Recent claims" aside={<Link href="/reimbursements" className="text-xs text-fg-brand hover:underline">New / view all</Link>}>
+          <MiniList
+            empty="No claims yet."
+            items={recent.map((r) => ({
+              key: r.id,
+              left: <Link href="/reimbursements" className="hover:text-fg-brand"><span className="font-mono text-xs text-fg-subtle">{r.number}</span> {r.title} · {formatRupiah(claimTotal(r))}</Link>,
+              right: r.status === "rejected" ? <Badge tone="danger">Rejected</Badge>
+                : r.paidAt ? <Badge tone="success">Paid {formatDate(r.paidAt)}</Badge>
+                : r.status === "revision" ? <Badge tone="warning">Needs revision</Badge>
+                : `Est. pay ${formatDate(payDate(r.submittedAt))}`,
+            }))}
+          />
+        </Panel>
+      </Stagger>
+      </CollapsibleSection>
+    </div>
   );
 }

@@ -17,7 +17,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "idtek dashboard",
-  description: "Timesheet, cuti, lembur, reimburse, payroll, dan project.",
+  description: "IDTEK internal dashboard: reimbursement, timesheet, leave, and payroll.",
 };
 
 // Terapkan theme tersimpan sebelum render untuk menghindari kedipan.
@@ -26,7 +26,7 @@ const themeScript = `try{if(localStorage.getItem("theme")==="light")document.doc
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="id"
+      lang="en"
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable} h-full antialiased`}
     >

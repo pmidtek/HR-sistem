@@ -63,9 +63,9 @@ export function saveSettings<K extends keyof DataState["settings"]>(s: DataState
 }
 
 export function saveUser(s: DataState, user: Omit<User, "id" | "employeeCode"> & { id?: string }): DataState {
-  if (!user.name.trim() || !user.email.includes("@")) throw new ActionError("Nama dan email wajib diisi dengan benar.");
+  if (!user.name.trim() || !user.email.includes("@")) throw new ActionError("Name and a valid email are required.");
   if (s.users.some((u) => u.email.toLowerCase() === user.email.toLowerCase() && u.id !== user.id)) {
-    throw new ActionError("Email sudah dipakai pegawai lain.");
+    throw new ActionError("This email is already used by another employee.");
   }
   if (user.id) return { ...s, users: s.users.map((u) => (u.id === user.id ? { ...u, ...user, id: u.id } : u)) };
   const max = s.users.reduce((m, u) => Math.max(m, Number(u.employeeCode.slice(4))), 0);

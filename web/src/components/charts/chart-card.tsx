@@ -62,7 +62,7 @@ export function ChartCard({ title, subtitle, series, table, aside, children }: P
         <div className="flex items-center gap-3">
           {aside}
           <button type="button" onClick={() => setAsTable((x) => !x)} className="text-xs text-fg-brand hover:underline" aria-pressed={asTable}>
-            {asTable ? "Lihat grafik" : "Lihat tabel"}
+            {asTable ? "Show chart" : "Show table"}
           </button>
         </div>
       </div>

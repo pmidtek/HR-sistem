@@ -24,7 +24,7 @@ type Props = {
 };
 
 /** Infografik alur reimburse: nominal per tahap, dari review sampai dibayar. */
-export function StatusFlow({ list, selected = null, onSelect, title = "Status pembayaran" }: Props) {
+export function StatusFlow({ list, selected = null, onSelect, title = "Payment status" }: Props) {
   const t = stageTotals(list);
   const gross = list.reduce((s, r) => s + claimGross(r), 0);
   const barTotal = barOrder.reduce((s, k) => s + t[k].amount, 0);
@@ -38,18 +38,18 @@ export function StatusFlow({ list, selected = null, onSelect, title = "Status pe
         <div>
           <p className="text-xs text-fg-muted">{title}</p>
           <CountUp value={gross} format={formatRupiah} className="font-serif text-4xl leading-tight" />
-          <p className="text-xs text-fg-subtle">{list.length} pengajuan · {list.reduce((s, r) => s + r.items.length, 0)} baris transaksi</p>
+          <p className="text-xs text-fg-subtle">{list.length} {list.length === 1 ? "claim" : "claims"} · {list.reduce((s, r) => s + r.items.length, 0)} items</p>
         </div>
         <div className="flex items-center gap-3">
           <Ring pct={paidPct} />
           <div>
-            <p className="text-sm">{paidPct}% sudah dibayar</p>
-            <p className="text-xs text-fg-subtle">dari {formatRupiah(approved)} yang disetujui</p>
+            <p className="text-sm">{paidPct}% paid</p>
+            <p className="text-xs text-fg-subtle">of {formatRupiah(approved)} approved</p>
           </div>
         </div>
       </div>
 
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-sunken" role="img" aria-label="Proporsi nominal per tahap">
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-sunken" role="img" aria-label="Amount by stage">
         {barOrder.map((k) => t[k].amount > 0 && (
           <motion.span
             key={k}
@@ -111,7 +111,7 @@ function StepButton({ stage, step, count, amount, active, onClick }: { stage: St
         {m.short}
       </span>
       <span className="font-mono text-base text-fg">{formatRupiah(amount)}</span>
-      <span className="text-xs text-fg-subtle">{count} pengajuan</span>
+      <span className="text-xs text-fg-subtle">{count} {count === 1 ? "claim" : "claims"}</span>
     </button>
   );
 }

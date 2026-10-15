@@ -145,7 +145,7 @@ describe("format", () => {
   });
 
   it("tanggal DD MMM YYYY", () => {
-    expect(formatDate("2026-10-05")).toBe("05 Okt 2026");
+    expect(formatDate("2026-10-05")).toBe("05 Oct 2026");
   });
 
   it("terbilang", () => {
@@ -167,11 +167,11 @@ describe("format", () => {
 describe("waktu relatif", () => {
   const now = "2026-10-07T12:00:00+07:00";
   it("baru saja, menit, jam, hari, bulan, tahun", () => {
-    expect(formatRelative("2026-10-07T11:59:30+07:00", now)).toBe("baru saja");
-    expect(formatRelative("2026-10-07T11:55:00+07:00", now)).toBe("5 mnt lalu");
-    expect(formatRelative("2026-10-07T09:00:00+07:00", now)).toBe("3 jam lalu");
-    expect(formatRelative("2026-10-05T12:00:00+07:00", now)).toBe("2 hr lalu");
-    expect(formatRelative("2026-06-01T12:00:00+07:00", now)).toBe("4 bln lalu");
-    expect(formatRelative("2025-09-01T12:00:00+07:00", now)).toBe("1 thn lalu");
+    expect(formatRelative("2026-10-07T11:59:30+07:00", now)).toBe("just now");
+    expect(formatRelative("2026-10-07T11:55:00+07:00", now)).toBe("5m ago");
+    expect(formatRelative("2026-10-07T09:00:00+07:00", now)).toBe("3h ago");
+    expect(formatRelative("2026-10-05T12:00:00+07:00", now)).toBe("2d ago");
+    expect(formatRelative("2026-06-01T12:00:00+07:00", now)).toBe("4mo ago");
+    expect(formatRelative("2025-09-01T12:00:00+07:00", now)).toBe("1y ago");
   });
 });

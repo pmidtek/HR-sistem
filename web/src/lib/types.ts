@@ -99,6 +99,9 @@ export type ReimbursementStatus =
 
 export type ReimbursementCategory = { id: string; name: string };
 
+/** File lampiran (struk, invoice, bukti transfer). `url` dipakai untuk membuka file; null jika tidak tersedia. */
+export type FileRef = { name: string; url: string | null };
+
 /** Satu baris di pengajuan reimburse (satu transaksi). */
 export type ReimbursementItem = {
   id: string;
@@ -111,12 +114,19 @@ export type ReimbursementItem = {
   amountUsdCents: number | null;
   /** Biaya dalam Rupiah (yang diganti ke pegawai). */
   amount: number;
-  files: string[];
+  files: FileRef[];
   /** Diisi jika baris ini ditolak saat review (baris lain tetap jalan). */
   declined: { note: string; byUserId: string } | null;
 };
 
-export type ReimbursePayment = { date: string; method: "transfer" | "payroll"; reference: string; byUserId: string };
+export type ReimbursePayment = {
+  date: string;
+  method: "transfer" | "payroll";
+  reference: string;
+  /** Bukti pembayaran (mis. screenshot transfer) yang di-upload pembayar. Wajib, supaya tidak ada miskom. */
+  proofFiles: FileRef[];
+  byUserId: string;
+};
 
 /** Satu pengajuan reimburse = satu grup baris; disetujui dan dibayar sekaligus. */
 export type Reimbursement = {

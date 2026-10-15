@@ -52,7 +52,8 @@ export function allowedReimburseActions(actor: Actor, ownerId: string, status: R
   if (isOwner && status === "revision") out.push("resubmit");
   if (!isOwner && status === "pending_finance" && actor.role === "finance") out.push("forward", "revision", "reject");
   if (!isOwner && status === "pending_stakeholder" && actor.role === "stakeholder") out.push("approve", "reject");
-  if (!isOwner && status === "approved" && actor.role === "finance") out.push("mark_paid");
+  // Pembayaran dicatat oleh Finance, HR, atau Stakeholder (wajib upload bukti transfer), bukan pemilik.
+  if (!isOwner && status === "approved" && actor.role !== "employee") out.push("mark_paid");
   return out;
 }
 
@@ -63,18 +64,18 @@ export function canReviewReimburseItems(actor: Actor, ownerId: string, status: R
 }
 
 export const leaveStatusLabel: Record<ApprovalStatus, string> = {
-  pending_hr: "Menunggu Review HR",
-  pending_stakeholder: "Diteruskan ke Stakeholder",
-  approved: "Disetujui",
-  rejected: "Ditolak",
-  cancelled: "Dibatalkan",
+  pending_hr: "Waiting for HR review",
+  pending_stakeholder: "Forwarded to Stakeholder",
+  approved: "Approved",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
 };
 
 export const reimburseStatusLabel: Record<ReimbursementStatus, string> = {
-  pending_finance: "Menunggu Review Finance",
-  revision: "Perlu Revisi",
-  pending_stakeholder: "Menunggu Keputusan Stakeholder",
-  approved: "Disetujui",
-  rejected: "Ditolak",
-  paid: "Sudah Dibayar",
+  pending_finance: "Waiting for Finance review",
+  revision: "Needs revision",
+  pending_stakeholder: "Waiting for Stakeholder approval",
+  approved: "Approved",
+  rejected: "Rejected",
+  paid: "Paid",
 };

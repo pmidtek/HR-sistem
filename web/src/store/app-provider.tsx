@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Actor } from "@/lib/calc/approval";
-import { MOCK_TODAY } from "@/lib/mock/work";
+import { todayJakarta } from "@/lib/calc/dates";
 import type { Team, User } from "@/lib/types";
 import { ActionError } from "./actions";
 import { initialState, type DataState } from "./state";
@@ -12,14 +12,14 @@ export type ToastItem = { id: number; title: string; tone: ToastTone };
 
 type AppContextValue = {
   state: DataState;
-  /** Tanggal "hari ini" untuk demo data dummy. Nanti diganti todayJakarta(). */
+  /** Tanggal hari ini (Asia/Jakarta). */
   today: string;
   user: User | null;
   /** false selama render server/hidrasi awal; sesi belum terbaca. */
   hydrated: boolean;
   team: Team | null;
   actor: Actor | null;
-  login: (userId: string) => void;
+  login: (userId: string, remember?: boolean) => void;
   logout: () => void;
   /** Jalankan mutasi; error aturan bisnis ditampilkan sebagai toast. Return true jika berhasil. */
   run: (mutate: (s: DataState) => DataState, successMessage?: string) => boolean;
@@ -40,8 +40,9 @@ const subscribe = (cb: () => void) => {
 };
 const emit = () => listeners.forEach((cb) => cb());
 
+/** "Remember me" → localStorage (tetap masuk setelah browser ditutup); tanpa itu → sessionStorage. */
 function readSession(): string | null {
-  return localStorage.getItem(SESSION_KEY);
+  return localStorage.getItem(SESSION_KEY) ?? sessionStorage.getItem(SESSION_KEY);
 }
 
 function readTheme(): "dark" | "light" {
@@ -53,6 +54,8 @@ let toastSeq = 0;
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DataState>(initialState);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // Tanggal asli (WIB). Data demo dibuat sekitar 7 Okt 2026, tapi pengajuan baru memakai hari ini.
+  const [today] = useState(() => todayJakarta());
   const sessionId = useSyncExternalStore(subscribe, readSession, () => null);
   const theme = useSyncExternalStore(subscribe, readTheme, () => "dark" as const);
   const hydrated = useSyncExternalStore(subscribe, () => true, () => false);
@@ -89,13 +92,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [state, toast],
   );
 
-  const login = useCallback((userId: string) => {
-    localStorage.setItem(SESSION_KEY, userId);
+  const login = useCallback((userId: string, remember = true) => {
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, userId);
     emit();
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     emit();
   }, []);
 
@@ -106,8 +112,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppContextValue>(
-    () => ({ state, today: MOCK_TODAY, user, hydrated, team, actor, login, logout, run, toasts, toast, dismissToast, theme, toggleTheme }),
-    [state, user, hydrated, team, actor, login, logout, run, toasts, toast, dismissToast, theme, toggleTheme],
+    () => ({ state, today, user, hydrated, team, actor, login, logout, run, toasts, toast, dismissToast, theme, toggleTheme }),
+    [state, today, user, hydrated, team, actor, login, logout, run, toasts, toast, dismissToast, theme, toggleTheme],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

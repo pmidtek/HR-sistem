@@ -1,62 +1,61 @@
 "use client";
 
+import { isReleased } from "@/lib/access";
 import { formatDate } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
 import { ActionSection, FinanceSection, PeopleSection, ProjectSection } from "@/components/dashboard/sections";
 import { MySection } from "@/components/dashboard/my-section";
-import { ReimburseCompanySection } from "@/components/dashboard/reimburse-section";
+import { ReimburseCompanySection, ReimburseMineSection } from "@/components/dashboard/reimburse-section";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { CountUpScope } from "@/components/ui/motion";
 
+/**
+ * Dashboard. Saat ini hanya modul Reimburse yang dirilis; bagian lain muncul lagi
+ * ketika modulnya masuk releasedFeatures (lib/access.ts).
+ */
 export default function DashboardPage() {
   const { user, team, today } = useAuthed();
   const firstName = user.name.split(" ")[0];
   const role = user.role;
+  const full = isReleased("timesheet") && isReleased("leave") && isReleased("payroll");
 
   return (
     <CountUpScope id="dashboard">
       <div className="flex flex-col gap-10">
-        <PageHeader title={`Halo, ${firstName}.`} accent={role === "stakeholder" ? "Ini ringkasan perusahaan." : "Siap kerja?"} description={formatDate(today)} />
+        <PageHeader title={`Hi, ${firstName}.`} description={formatDate(today)} />
 
-        {role !== "employee" && (
+        {role === "employee" ? <ReimburseMineSection /> : <ReimburseCompanySection />}
+
+        {full && role !== "employee" && (
           <div>
-            <SectionTitle>Perlu tindakan saya</SectionTitle>
+            <SectionTitle>Other requests</SectionTitle>
             <ActionSection />
           </div>
         )}
-
-        {(role === "stakeholder" || role === "finance") && (
+        {full && role === "stakeholder" && isReleased("projects") && (
           <div>
-            <SectionTitle>Reimburse</SectionTitle>
-            <ReimburseCompanySection />
-          </div>
-        )}
-
-        {role === "stakeholder" && (
-          <div>
-            <SectionTitle>Project</SectionTitle>
+            <SectionTitle>Projects</SectionTitle>
             <ProjectSection />
           </div>
         )}
-
-        {(role === "stakeholder" || role === "hr") && (
+        {full && (role === "stakeholder" || role === "hr") && (
           <div>
-            <SectionTitle>SDM</SectionTitle>
+            <SectionTitle>People</SectionTitle>
             <PeopleSection />
           </div>
         )}
-
-        {(role === "stakeholder" || role === "finance") && (
+        {full && (role === "stakeholder" || role === "finance") && (
           <div>
-            <SectionTitle>Keuangan</SectionTitle>
+            <SectionTitle>Finance</SectionTitle>
             <FinanceSection />
           </div>
         )}
-
-        <div>
-          <SectionTitle>Pekerjaan saya</SectionTitle>
-          <MySection showTasks={team?.kind === "delivery"} delay={role === "employee" ? 0 : 0.24} />
-        </div>
+        {full && (
+          <div>
+            <SectionTitle>My work</SectionTitle>
+            <MySection showTasks={team?.kind === "delivery" && isReleased("projects")} delay={0.24} />
+          </div>
+        )}
       </div>
     </CountUpScope>
   );

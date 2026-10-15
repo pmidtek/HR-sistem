@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { formatNumber } from "@/lib/format";
+import { addDays, dayOfWeek } from "@/lib/calc/dates";
+import { estimatedPayDate } from "@/lib/calc/reimburse";
+import { formatDayShort, formatNumber } from "@/lib/format";
 import type { AppSettings } from "@/lib/settings-types";
 import { useAuthed } from "@/store/app-provider";
 import { saveSettings } from "@/store/actions-business";
@@ -18,7 +20,7 @@ function useSettingDraft<K extends keyof AppSettings>(key: K) {
     draft,
     setDraft,
     dirty,
-    save: () => run((s) => saveSettings(s, key, draft), "Pengaturan disimpan."),
+    save: () => run((s) => saveSettings(s, key, draft), "Settings saved."),
     reset: () => setDraft(state.settings[key]),
   };
 }
@@ -73,7 +75,6 @@ export function PayrollForm({ readOnly }: FormProps) {
           <Input label="Tanggal cutoff" type="number" min={1} max={28} value={d.cutoffDay} onChange={(e) => setDraft({ ...d, cutoffDay: num(e.target.value) })} helperText={`Periode: tgl ${d.cutoffDay + 1} bulan lalu s/d tgl ${d.cutoffDay} bulan ini.`} />
         )}
       </div>
-      <Input label="Kurs USD untuk reimburse (Rp per $1)" inputMode="numeric" value={formatNumber(d.usdRate)} onChange={(e) => setDraft({ ...d, usdRate: parseRp(e.target.value) })} helperText="Dipakai untuk mengisi otomatis kolom Rupiah. Pegawai tetap bisa mengubahnya sesuai tagihan kartu." />
       <Switch checked={d.reimburseViaPayroll} onChange={(v) => setDraft({ ...d, reimburseViaPayroll: v })} label="Reimburse yang disetujui dibayar lewat payroll" />
       <Switch checked={d.payslipPasswordProtected} onChange={(v) => setDraft({ ...d, payslipPasswordProtected: v })} label="PDF slip gaji dilindungi password (tanggal lahir DDMMYYYY)" />
     </SettingsSection>
@@ -83,10 +84,49 @@ export function PayrollForm({ readOnly }: FormProps) {
 export function CompanyForm({ readOnly }: FormProps) {
   const { draft: d, setDraft, dirty, save, reset } = useSettingDraft("company");
   return (
-    <SettingsSection title="Perusahaan" description="Ditampilkan di kop slip gaji." readOnly={readOnly} dirty={dirty} onSave={save} onReset={reset}>
-      <Input label="Nama perusahaan" value={d.name} onChange={(e) => setDraft({ ...d, name: e.target.value })} />
-      <Textarea label="Alamat" value={d.address} onChange={(e) => setDraft({ ...d, address: e.target.value })} />
-      <Input label="Logo" type="file" accept="image/*" helperText="Upload logo akan aktif setelah backend tersambung." disabled />
+    <SettingsSection title="Company" description="Shown on documents and payslips." readOnly={readOnly} dirty={dirty} onSave={save} onReset={reset}>
+      <Input label="Company name" value={d.name} onChange={(e) => setDraft({ ...d, name: e.target.value })} />
+      <Textarea label="Address" value={d.address} onChange={(e) => setDraft({ ...d, address: e.target.value })} />
+      <Input label="Logo" type="file" accept="image/*" helperText="Logo upload will be enabled once the backend is connected." disabled />
+    </SettingsSection>
+  );
+}
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export function ReimburseForm({ readOnly }: FormProps) {
+  const { state } = useAuthed();
+  const { draft: d, setDraft, dirty, save, reset } = useSettingDraft("reimburse");
+  const holidays = new Set(state.holidays.map((h) => h.date));
+  const toggleDay = (day: number) => setDraft({ ...d, payDays: d.payDays.includes(day) ? d.payDays.filter((x) => x !== day) : [...d.payDays, day].sort() });
+  // Contoh: pengajuan Senin–Minggu minggu ini → perkiraan tanggal bayar.
+  const monday = "2026-10-12";
+  return (
+    <SettingsSection title="Reimbursement payment" description="Approved claims are paid on the next pay day at least N days after submission. Holidays are skipped." readOnly={readOnly} dirty={dirty} onSave={save} onReset={reset}>
+      <div className="flex flex-col gap-2">
+        <p className="text-xs text-fg-muted">Pay days</p>
+        <div className="flex flex-wrap gap-2">
+          {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+            <label key={day} className="inline-flex items-center gap-2 rounded-xxs px-2.5 py-1.5 text-sm shadow-[inset_0_0_0_1px_var(--border-default)]">
+              <input type="checkbox" checked={d.payDays.includes(day)} onChange={() => toggleDay(day)} className="accent-[var(--brand)]" />
+              {DAY_NAMES[day]}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input label="Minimum days from submission to payment" type="number" min={0} max={14} value={d.leadDays} onChange={(e) => setDraft({ ...d, leadDays: num(e.target.value) })} />
+        <Input label="USD exchange rate (Rp per $1)" inputMode="numeric" value={formatNumber(d.usdRate)} onChange={(e) => setDraft({ ...d, usdRate: parseRp(e.target.value) })} helperText="Pre-fills the IDR column. Employees can still change it to match their card statement." />
+      </div>
+      <div className="rounded-xs bg-sunken px-4 py-3 text-xs text-fg-muted">
+        <p className="mb-1.5 text-fg">Preview</p>
+        <ul className="grid gap-1 sm:grid-cols-2">
+          {[0, 1, 2, 3, 4].map((i) => {
+            const day = addDays(monday, i);
+            return <li key={day}>Submitted on {DAY_NAMES[dayOfWeek(day)]} → paid {formatDayShort(estimatedPayDate(day, d, holidays))}</li>;
+          })}
+        </ul>
+      </div>
     </SettingsSection>
   );
 }

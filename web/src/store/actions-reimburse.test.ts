@@ -8,8 +8,8 @@ const emp = { id: "u4", role: "employee" as const };
 const fin = { id: "u3", role: "finance" as const };
 const sh = { id: "u1", role: "stakeholder" as const };
 const rows = [
-  { date: "2026-10-01", description: "Tiket Whoosh", categoryId: "transportation", projectCode: null, amountUsdCents: null, amount: 300_000, files: ["a.pdf"] },
-  { date: "2026-10-01", description: "Claude", categoryId: "subscriptions", projectCode: "OTHERS", amountUsdCents: 2_200, amount: 401_944, files: ["b.pdf", "c.jpg"] },
+  { date: "2026-10-01", description: "Tiket Whoosh", categoryId: "transportation", projectCode: null, amountUsdCents: null, amount: 300_000, files: [{ name: "a.pdf", url: null }] },
+  { date: "2026-10-01", description: "Claude", categoryId: "subscriptions", projectCode: "OTHERS", amountUsdCents: 2_200, amount: 401_944, files: [{ name: "b.pdf", url: null }, { name: "c.jpg", url: null }] },
 ];
 
 describe("alur reimburse per grup", () => {
@@ -17,7 +17,7 @@ describe("alur reimburse per grup", () => {
   const claim = s1.reimbursements[0];
 
   it("pengajuan baru jadi satu grup dengan nomor urut", () => {
-    expect(claim).toMatchObject({ userId: "u4", status: "pending_finance", number: "RB-2610-003" });
+    expect(claim).toMatchObject({ userId: "u4", status: "pending_finance", number: "RB-2610-004" });
     expect(claim.items).toHaveLength(2);
   });
 
@@ -29,7 +29,7 @@ describe("alur reimburse per grup", () => {
     const approved = s4.reimbursements.find((r) => r.id === claim.id)!;
     expect(approved.status).toBe("approved");
     expect(claimTotal(approved)).toBe(300_000);
-    const s5 = payReimburseClaims(s4, [claim.id, "rb6"], { date: TODAY, method: "transfer", reference: "TRF-1" }, fin);
+    const s5 = payReimburseClaims(s4, [claim.id, "rb6"], { date: TODAY, method: "transfer", reference: "TRF-1", proofFiles: [{ name: "trf.jpg", url: null }] }, fin);
     const paid = s5.reimbursements.find((r) => r.id === claim.id)!;
     expect(paid).toMatchObject({ status: "paid", paidAt: TODAY, payment: { method: "transfer", reference: "TRF-1", byUserId: "u3" } });
     expect(s5.reimbursements.find((r) => r.id === "rb6")!.status).toBe("paid");
@@ -51,6 +51,28 @@ describe("alur reimburse per grup", () => {
   });
 
   it("pegawai biasa tidak bisa menandai dibayar", () => {
-    expect(() => payReimburseClaims(s1, ["rb6"], { date: TODAY, method: "transfer", reference: "" }, emp)).toThrow();
+    expect(() => payReimburseClaims(s1, ["rb6"], { date: TODAY, method: "transfer", reference: "", proofFiles: [{ name: "x.jpg", url: null }] }, emp)).toThrow();
+  });
+
+  it("bukti pembayaran wajib", () => {
+    const s2 = actOnReimburse(actOnReimburse(s1, claim.id, "forward", fin), claim.id, "approve", sh);
+    expect(() => payReimburseClaims(s2, [claim.id], { date: TODAY, method: "transfer", reference: "", proofFiles: [] }, fin)).toThrow();
+    expect(payReimburseClaims(s2, [claim.id], { date: TODAY, method: "transfer", reference: "", proofFiles: [{ name: "a.jpg", url: null }] }, sh).reimbursements.find((r) => r.id === claim.id)?.status).toBe("paid");
+  });
+
+  it("pegawai dapat notifikasi pribadi berisi alasan tolak & baris yang ditolak", () => {
+    const mineOf = (st: typeof s1) => st.notifications.filter((n) => n.userId === emp.id);
+    const rejected = actOnReimburse(s1, claim.id, "reject", fin, "Not a business expense");
+    expect(mineOf(rejected)[0]).toMatchObject({ title: "Your reimbursement was rejected", href: `/reimbursements?claim=${claim.id}` });
+    expect(mineOf(rejected)[0].body).toContain("Reason: Not a business expense");
+
+    const declined = setReimburseItemDecline(s1, claim.id, claim.items[1].id, "Personal account", fin);
+    const forwarded = actOnReimburse(declined, claim.id, "forward", fin);
+    expect(mineOf(forwarded)[0].title).toBe("Some items in your reimbursement were declined");
+    expect(mineOf(forwarded)[0].body).toContain("Claude (Rp401.944): Personal account");
+
+    const approved = actOnReimburse(forwarded, claim.id, "approve", sh);
+    expect(mineOf(approved)[0].title).toBe("Your reimbursement was approved (partially)");
+    expect(mineOf(approved)[0].body).toContain("Rp300.000 will be paid, estimated Fri, 9 Oct");
   });
 });
