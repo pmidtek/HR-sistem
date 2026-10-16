@@ -5,6 +5,7 @@ import { useId, useState, type ClipboardEvent, type KeyboardEvent } from "react"
 import {
   isBlankRow, normalizeProjectCode, parseUsdCents, usdToIdr, validateReimburseRow, type ReimburseRowInput, type RowErrors,
 } from "@/lib/calc/reimburse";
+import { addDays } from "@/lib/calc/dates";
 import { parsePastedRows } from "@/lib/calc/reimburse-paste";
 import { formatDayShort, formatRupiah } from "@/lib/format";
 import type { Reimbursement } from "@/lib/types";
@@ -83,7 +84,7 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
   function submit() {
     const errs: Record<number, RowErrors> = {};
     for (const r of filled) {
-      const e = validateReimburseRow(toInput(r), today);
+      const e = validateReimburseRow(toInput(r), today, state.settings.reimburse.maxReceiptAgeDays);
       if (Object.keys(e).length > 0) errs[r.key] = e;
     }
     setErrors(errs);
@@ -135,7 +136,7 @@ export function ReimburseSheet({ onClose, editing }: { onClose: () => void; edit
           <tbody>
             {rows.map((r, i) => (
               <SheetRowCells
-                key={r.key} row={r} index={i} errors={errors[r.key] ?? {}} categories={state.reimbursementCategories} today={today} codeListId={codeListId}
+                key={r.key} row={r} index={i} errors={errors[r.key] ?? {}} categories={state.reimbursementCategories} today={today} minDate={addDays(today, -state.settings.reimburse.maxReceiptAgeDays)} codeListId={codeListId}
                 onChange={(p) => update(r.key, p)} onUsd={(t) => setUsd(r, t)} onEnter={(e) => onEnter(e, r.key)} onPaste={(e) => onPaste(e, r.key)}
                 onDuplicate={() => duplicate(r)} onRemove={() => remove(r.key)}
               />

@@ -5,6 +5,7 @@ import { ArrowRight, Eye, EyeOff, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, type FormEvent } from "react";
 import { roleLabel } from "@/lib/access";
+import { todayJakarta } from "@/lib/calc/dates";
 import { cn } from "@/lib/cn";
 import { useApp } from "@/store/app-provider";
 
@@ -32,12 +33,19 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [remember, setRemember] = useState(true);
-  const demo = ["u1", "u2", "u3", "u4", "u5", "u6"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
+  const demo = ["u1", "u2", "u3", "u4", "u5", "u6", "u11"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
+  // Akun nonaktif atau external yang masa aksesnya habis tidak bisa masuk.
+  const blockedReason = (u: (typeof demo)[number]) =>
+    !u.active ? "This account is inactive. Contact HR."
+    : u.role === "external" && u.external && u.external.accessUntil < todayJakarta() ? "Your access period has ended. Contact your PIC."
+    : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     const found = state.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
     if (!found || password.length === 0) return setError("Wrong email or password.");
+    const blocked = blockedReason(found);
+    if (blocked) return setError(blocked);
     login(found.id, remember);
   }
 
@@ -119,7 +127,7 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-sm">{u.name}</span>
                         <span className="truncate text-[11px] text-white/45">
-                          {roleLabel[u.role]}{u.role === "employee" && ` · ${state.teams.find((t) => t.id === u.teamId)?.name ?? ""}`}
+                          {roleLabel[u.role]}{u.role === "employee" && ` · ${state.teams.find((t) => t.id === u.teamId)?.name ?? ""}`}{u.role === "external" && ` · ${u.position}`}
                         </span>
                       </span>
                       <ArrowRight size={14} strokeWidth={1.5} className="text-white/30" />

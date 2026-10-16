@@ -8,11 +8,11 @@ import { motion } from "motion/react";
  * Kartu bergaya kaca di atas latar gradasi. Diam jika prefers-reduced-motion aktif (lewat MotionProvider).
  */
 const days = [
-  { d: "Sen", h: 0.6 },
-  { d: "Sel", h: 0.75 },
-  { d: "Rab", h: 0.5 },
-  { d: "Kam", h: 0.7 },
-  { d: "Jum", h: 0.55 },
+  { d: "Mon", h: 0.6 },
+  { d: "Tue", h: 0.75 },
+  { d: "Wed", h: 0.5 },
+  { d: "Thu", h: 0.7 },
+  { d: "Fri", h: 0.55 },
 ];
 const loop = { repeat: Infinity, repeatDelay: 3, duration: 0.7, ease: "easeOut" } as const;
 const glass = "bg-white/[0.07] backdrop-blur-xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16),inset_0_1px_0_rgba(255,255,255,0.12),0_24px_48px_-16px_rgba(0,0,0,0.6)]";
@@ -35,7 +35,7 @@ export function LoginIllustration() {
       {/* Kartu timesheet utama */}
       <div className={`absolute bottom-0 left-0 w-64 rounded-m p-4 ${glass}`}>
         <div className="flex items-center justify-between">
-          <p className="text-xs text-white/80">Timesheet minggu ini</p>
+          <p className="text-xs text-white/80">This week&apos;s timesheet</p>
           <svg width="16" height="16" viewBox="0 0 16 16" className="text-white/50">
             <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.2" />
             <motion.line
@@ -66,14 +66,14 @@ export function LoginIllustration() {
         </div>
 
         <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-          <span className="text-[11px] text-white/60">Total 40 jam</span>
+          <span className="text-[11px] text-white/60">Total 40 h</span>
           <motion.span
             className="flex items-center gap-1 rounded-full bg-[#1e3a2a]/80 px-2 py-0.5 text-[10px] text-[#7fd6a1]"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ ...loop, duration: 0.35, delay: 1 }}
           >
-            <Check size={10} strokeWidth={2.5} /> Disetujui
+            <Check size={10} strokeWidth={2.5} /> Approved
           </motion.span>
         </div>
       </div>

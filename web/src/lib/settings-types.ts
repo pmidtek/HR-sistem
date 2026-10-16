@@ -57,6 +57,10 @@ export type ReimburseSettings = {
   payDays: number[];
   /** Jarak minimal (hari) dari pengajuan ke hari bayar. Senin + 2 = Rabu, Rabu + 2 = Jumat. */
   leadDays: number;
+  /** Struk lebih tua dari ini (hari) tidak bisa diajukan. */
+  maxReceiptAgeDays: number;
+  /** Bayar via transfer hanya ke rekening yang sudah diverifikasi Finance. */
+  requireVerifiedAccount: boolean;
 };
 
 export type CompanySettings = {

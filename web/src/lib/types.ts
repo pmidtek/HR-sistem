@@ -6,7 +6,8 @@
 import type { PayrollInput } from "./calc/payroll";
 import type { ClientContactRole, ProjectLabel, ProjectMember } from "./project-types";
 
-export type Role = "stakeholder" | "hr" | "finance" | "employee";
+/** "external" = freelance/vendor: hanya bisa mengajukan reimburse, wajib punya PIC internal. */
+export type Role = "stakeholder" | "hr" | "finance" | "employee" | "external";
 
 export type TeamKind = "sales" | "delivery" | "support";
 export type Team = { id: string; name: string; kind: TeamKind };
@@ -21,6 +22,29 @@ export type User = {
   position: string;
   joinDate: string;
   active: boolean;
+  /** Rekening tujuan pembayaran reimburse. Nomor rekening hanya terlihat utuh oleh pemilik & Finance. */
+  bankAccount?: BankAccount | null;
+  /** Khusus role "external". */
+  external?: ExternalInfo | null;
+};
+
+export type BankAccount = {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  /** Rekening baru/berubah wajib diverifikasi Finance sebelum bisa dibayar via transfer. */
+  verified: boolean;
+  verifiedBy: string | null;
+  updatedAt: string;
+};
+
+export type ExternalInfo = {
+  /** Perusahaan/vendor asal (boleh kosong untuk freelance perorangan). */
+  company: string;
+  /** PIC internal yang mengonfirmasi setiap pengajuan. */
+  sponsorId: string;
+  /** Akses berakhir setelah tanggal ini (mis. akhir kontrak). */
+  accessUntil: string;
 };
 
 export type Holiday = { date: string; name: string };
@@ -90,6 +114,8 @@ export type OvertimeRequest = {
 };
 
 export type ReimbursementStatus =
+  /** Khusus pengajuan external: menunggu konfirmasi PIC internal. */
+  | "pending_sponsor"
   | "pending_finance"
   | "revision"
   | "pending_stakeholder"
@@ -97,10 +123,12 @@ export type ReimbursementStatus =
   | "rejected"
   | "paid";
 
-export type ReimbursementCategory = { id: string; name: string };
+/** `limitPerItem` = batas wajar per baris (Rp); di atasnya ditandai untuk ditinjau. null = tanpa batas. */
+export type ReimbursementCategory = { id: string; name: string; limitPerItem?: number | null };
 
 /** File lampiran (struk, invoice, bukti transfer). `url` dipakai untuk membuka file; null jika tidak tersedia. */
-export type FileRef = { name: string; url: string | null };
+/** `hash` = sidik jari isi file (SHA-256) untuk mendeteksi struk yang sama dipakai dua kali. */
+export type FileRef = { name: string; url: string | null; hash?: string };
 
 /** Satu baris di pengajuan reimburse (satu transaksi). */
 export type ReimbursementItem = {
@@ -125,6 +153,8 @@ export type ReimbursePayment = {
   reference: string;
   /** Bukti pembayaran (mis. screenshot transfer) yang di-upload pembayar. Wajib, supaya tidak ada miskom. */
   proofFiles: FileRef[];
+  /** Rekening tujuan saat dibayar (dicatat permanen, supaya perubahan rekening setelahnya tidak mengubah riwayat). */
+  toAccount: Pick<BankAccount, "bankName" | "accountNumber" | "accountHolder"> | null;
   byUserId: string;
 };
 

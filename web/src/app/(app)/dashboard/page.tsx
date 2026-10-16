@@ -24,9 +24,9 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-10">
         <PageHeader title={`Hi, ${firstName}.`} description={formatDate(today)} />
 
-        {role === "employee" ? <ReimburseMineSection /> : <ReimburseCompanySection />}
+        {role === "employee" || role === "external" ? <ReimburseMineSection /> : <ReimburseCompanySection />}
 
-        {full && role !== "employee" && (
+        {full && role !== "employee" && role !== "external" && (
           <div>
             <SectionTitle>Other requests</SectionTitle>
             <ActionSection />

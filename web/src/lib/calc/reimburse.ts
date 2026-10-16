@@ -6,14 +6,16 @@ export type ReimburseRowInput = Pick<ReimbursementItem, "date" | "description" |
 
 export type RowErrors = Partial<Record<keyof ReimburseRowInput, string>>;
 
-export function validateReimburseRow(row: ReimburseRowInput, today: string): RowErrors {
+/** `maxAgeDays` = umur maksimal struk (hari); lebih tua dari itu ditolak supaya struk lama tidak "didaur ulang". */
+export function validateReimburseRow(row: ReimburseRowInput, today: string, maxAgeDays?: number): RowErrors {
   const e: RowErrors = {};
-  if (!row.date || row.date > today) e.date = "Tanggal tidak valid.";
-  if (!row.description.trim()) e.description = "Isi keterangan.";
-  if (!row.categoryId) e.categoryId = "Pilih kategori.";
-  if (row.amountUsdCents !== null && (!Number.isInteger(row.amountUsdCents) || row.amountUsdCents <= 0)) e.amountUsdCents = "Nominal USD tidak valid.";
-  if (!Number.isInteger(row.amount) || row.amount <= 0) e.amount = "Isi biaya dalam Rupiah.";
-  if (row.files.length === 0) e.files = "Minimal 1 bukti.";
+  if (!row.date || row.date > today) e.date = "Date can't be in the future.";
+  else if (maxAgeDays && row.date < addDays(today, -maxAgeDays)) e.date = `Receipts older than ${maxAgeDays} days can't be claimed.`;
+  if (!row.description.trim()) e.description = "Description is required.";
+  if (!row.categoryId) e.categoryId = "Pick a category.";
+  if (row.amountUsdCents !== null && (!Number.isInteger(row.amountUsdCents) || row.amountUsdCents <= 0)) e.amountUsdCents = "Invalid USD amount.";
+  if (!Number.isInteger(row.amount) || row.amount <= 0) e.amount = "Enter the cost in IDR.";
+  if (row.files.length === 0) e.files = "Attach at least 1 receipt.";
   return e;
 }
 
@@ -73,6 +75,7 @@ export type Stage = "finance" | "stakeholder" | "revision" | "unpaid" | "paid" |
 
 export function stageOf(status: ReimbursementStatus): Stage {
   switch (status) {
+    case "pending_sponsor":
     case "pending_finance": return "finance";
     case "pending_stakeholder": return "stakeholder";
     case "revision": return "revision";

@@ -60,4 +60,14 @@ describe("approval reimburse", () => {
     expect(canReviewReimburseItems(fin, "fin1", "pending_finance")).toBe(false);
     expect(canReviewReimburseItems(fin, "e1", "approved")).toBe(false);
   });
+
+  it("pengajuan external: hanya PIC yang konfirmasi, pemilik & orang lain tidak", () => {
+    const pic = { id: "e9", role: "employee" as const };
+    const ext = { id: "x1", role: "external" as const };
+    expect(allowedReimburseActions(pic, "x1", "pending_sponsor", "e9")).toEqual(["confirm", "revision", "reject"]);
+    expect(allowedReimburseActions(fin, "x1", "pending_sponsor", "e9")).toEqual([]);
+    expect(allowedReimburseActions(ext, "x1", "pending_sponsor", "e9")).toEqual([]);
+    expect(canReviewReimburseItems(pic, "x1", "pending_sponsor", "e9")).toBe(true);
+    expect(allowedReimburseActions(ext, "x2", "approved")).toEqual([]);
+  });
 });

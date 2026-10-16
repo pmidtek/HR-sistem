@@ -36,11 +36,14 @@ export const roleLabel: Record<Role, string> = {
   hr: "HR",
   finance: "Finance",
   employee: "Employee",
+  external: "External",
 };
 
 /** Matriks akses dari BRIEF.md Bagian 2. Di server, aturan yang sama ditegakkan oleh permission Directus. */
 export function canAccess(user: User, team: Team | null, feature: Feature): boolean {
   const r = user.role;
+  // External (freelance/vendor) hanya bisa mengajukan & melihat reimburse miliknya.
+  if (r === "external") return feature === "dashboard" || feature === "reimbursements";
   switch (feature) {
     case "dashboard":
     case "timesheet":
@@ -66,7 +69,8 @@ export function canAccess(user: User, team: Team | null, feature: Feature): bool
 
 /** Boleh edit (bukan hanya lihat)? */
 export function canEdit(user: User, team: Team | null, feature: Feature): boolean {
-  if (feature === "employees") return user.role === "hr";
+  // HR & Finance bisa menambah pegawai/external; verifikasi rekening khusus Finance.
+  if (feature === "employees") return user.role === "hr" || user.role === "finance";
   return canAccess(user, team, feature);
 }
 

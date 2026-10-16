@@ -67,9 +67,18 @@ export function saveUser(s: DataState, user: Omit<User, "id" | "employeeCode"> &
   if (s.users.some((u) => u.email.toLowerCase() === user.email.toLowerCase() && u.id !== user.id)) {
     throw new ActionError("This email is already used by another employee.");
   }
-  if (user.id) return { ...s, users: s.users.map((u) => (u.id === user.id ? { ...u, ...user, id: u.id } : u)) };
-  const max = s.users.reduce((m, u) => Math.max(m, Number(u.employeeCode.slice(4))), 0);
-  const created: User = { ...user, id: newId("u"), employeeCode: `EMP-${String(max + 1).padStart(4, "0")}` };
+  if (user.role === "external") {
+    if (!user.external?.sponsorId) throw new ActionError("Externals need an internal PIC.");
+    if (!user.external.accessUntil) throw new ActionError("Set when the external's access ends.");
+    if (user.external.sponsorId === user.id) throw new ActionError("An external can't be their own PIC.");
+  }
+  const external = user.role === "external" ? user.external ?? null : null;
+  // Rekening tidak diubah lewat form ini (punya alur verifikasi sendiri, lihat actions-bank.ts).
+  if (user.id) return { ...s, users: s.users.map((u) => (u.id === user.id ? { ...u, ...user, external, bankAccount: u.bankAccount, id: u.id } : u)) };
+  const prefix = user.role === "external" ? "EXT-" : "EMP-";
+  const max = s.users.filter((u) => u.employeeCode.startsWith(prefix)).reduce((m, u) => Math.max(m, Number(u.employeeCode.slice(4))), 0);
+  const created: User = { ...user, external, bankAccount: null, id: newId("u"), employeeCode: `${prefix}${String(max + 1).padStart(4, "0")}` };
+  if (user.role === "external") return { ...s, users: [...s.users, created] };
   const balances = s.leaveTypes
     .filter((t) => t.deductsBalance && t.quotaDays !== null)
     .map((t) => ({ userId: created.id, leaveTypeId: t.id, year: 2026, quota: t.quotaDays ?? 0, used: 0 }));

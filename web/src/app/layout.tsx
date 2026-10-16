@@ -16,8 +16,8 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "idtek dashboard",
-  description: "IDTEK internal dashboard: reimbursement, timesheet, leave, and payroll.",
+  title: "SIDESAH · Sistem Informasi Data Elektronik Slip & Absensi Harian",
+  description: "SIDESAH by IDTEK: reimbursement, timesheet, leave, and payroll in one place.",
 };
 
 // Terapkan theme tersimpan sebelum render untuk menghindari kedipan.

@@ -115,6 +115,12 @@ export function ReimburseForm({ readOnly }: FormProps) {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
+        <Input label="Max receipt age (days)" type="number" min={1} max={365} value={d.maxReceiptAgeDays} onChange={(e) => setDraft({ ...d, maxReceiptAgeDays: num(e.target.value) })} helperText="Older receipts can't be submitted, so old receipts aren't recycled." />
+        <div className="flex items-end pb-2">
+          <Switch checked={d.requireVerifiedAccount} onChange={(v) => setDraft({ ...d, requireVerifiedAccount: v })} label="Only transfer to bank accounts verified by Finance" />
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         <Input label="Minimum days from submission to payment" type="number" min={0} max={14} value={d.leadDays} onChange={(e) => setDraft({ ...d, leadDays: num(e.target.value) })} />
         <Input label="USD exchange rate (Rp per $1)" inputMode="numeric" value={formatNumber(d.usdRate)} onChange={(e) => setDraft({ ...d, usdRate: parseRp(e.target.value) })} helperText="Pre-fills the IDR column. Employees can still change it to match their card statement." />
       </div>

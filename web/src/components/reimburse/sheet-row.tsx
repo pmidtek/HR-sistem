@@ -21,6 +21,8 @@ type Props = {
   errors: RowErrors;
   categories: ReimbursementCategory[];
   today: string;
+  /** Tanggal paling lama yang boleh (batas umur struk). */
+  minDate: string;
   codeListId: string;
   onChange: (patch: Partial<SheetRow>) => void;
   onUsd: (text: string) => void;
@@ -30,14 +32,14 @@ type Props = {
   onRemove: () => void;
 };
 
-export function SheetRowCells({ row: r, index: i, errors: e, categories, today, codeListId, onChange, onUsd, onEnter, onPaste, onDuplicate, onRemove }: Props) {
+export function SheetRowCells({ row: r, index: i, errors: e, categories, today, minDate, codeListId, onChange, onUsd, onEnter, onPaste, onDuplicate, onRemove }: Props) {
   const n = i + 1;
   const [viewAt, setViewAt] = useState<number | null>(null);
   return (
     <tr className="align-top">
       <td className="bg-sunken px-2 py-2.5 text-center font-mono text-xs text-fg-subtle">{n}</td>
       <td className={cn("p-0", e.date && bad)} title={e.date}>
-        <input type="date" max={today} value={r.date} onChange={(ev) => onChange({ date: ev.target.value })} onKeyDown={onEnter} className={cell} aria-label={`Date row ${n}`} />
+        <input type="date" min={minDate} max={today} value={r.date} onChange={(ev) => onChange({ date: ev.target.value })} onKeyDown={onEnter} className={cell} aria-label={`Date row ${n}`} />
       </td>
       <td className={cn("p-0", e.description && bad)} title={e.description}>
         <input value={r.description} placeholder="e.g. Whoosh train ticket" onChange={(ev) => onChange({ description: ev.target.value })} onKeyDown={onEnter} onPaste={onPaste} className={cell} aria-label={`Description row ${n}`} />

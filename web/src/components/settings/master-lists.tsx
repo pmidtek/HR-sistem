@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 import type { ActivityCode, Holiday, LeaveType, ReimbursementCategory, Team } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
 import { saveMaster } from "@/store/actions-business";
@@ -86,8 +86,12 @@ export function ActivityList({ readOnly }: { readOnly: boolean }) {
 export function CategoryList({ readOnly }: { readOnly: boolean }) {
   return (
     <MasterList<"reimbursementCategories"> storeKey="reimbursementCategories" title="Reimbursement categories" readOnly={readOnly}
-      headers={["Category name"]} blank={(): ReimbursementCategory => ({ id: newId("cat"), name: "" })}
-      renderRow={(c, up) => [<Input key="n" size="small" className={sm} value={c.name} onChange={(e) => up({ name: e.target.value })} />]} />
+      description="Items above the limit are flagged for reviewers (not blocked). Leave the limit empty for no limit."
+      headers={["Category name", "Limit per item (Rp)"]} blank={(): ReimbursementCategory => ({ id: newId("cat"), name: "", limitPerItem: null })}
+      renderRow={(c, up) => [
+        <Input key="n" size="small" className={sm} value={c.name} onChange={(e) => up({ name: e.target.value })} />,
+        <Input key="l" size="small" className={sm} inputMode="numeric" placeholder="No limit" value={c.limitPerItem ? formatNumber(c.limitPerItem) : ""} onChange={(e) => up({ limitPerItem: Number(e.target.value.replace(/\D/g, "")) || null })} />,
+      ]} />
   );
 }
 

@@ -11,7 +11,8 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 - **Project Workspace** (12 menu) mengikuti `docs/PROJECT-WORKSPACE.md` dan sudah selesai di frontend. Hak akses project terpusat di `web/src/lib/projects.ts`.
 - Grafik dibuat sendiri dengan SVG (`web/src/components/charts/`); warna seri memakai token `--chart-1..3` yang sudah divalidasi (CVD & kontras). Markdown memakai `react-markdown`.
 - **Rilis bertahap** (15 Okt 2026): modul yang sudah dirilis diatur di `releasedFeatures` (`web/src/lib/access.ts`). Saat ini baru Dashboard + Reimburse (+ Approvals, Employees, Settings). Modul lain tampil di menu dengan label "Soon" dan halamannya "Coming soon".
-- Nama aplikasi: **idtek dashboard**. Ikon IDTEK ada di `web/public/brand/idtek-icon.png` dan `web/src/app/icon.png` (favicon).
+- **External (freelance/vendor)** (16 Okt 2026): role `external`, hanya akses Reimburse; wajib punya PIC internal & batas akses. Alur: PIC konfirmasi → Finance → Stakeholder → dibayar. Rekening bank wajib diverifikasi Finance sebelum transfer; tanda anti-fraud di `web/src/lib/calc/reimburse-risk.ts`.
+- Nama aplikasi: **SIDESAH** (Sistem Informasi Data Elektronik Slip & Absensi Harian), "by IDTEK". Nama & kepanjangan ada di `web/src/components/brand/logos.tsx` (`APP_NAME`, `APP_FULL_NAME`). Ikon IDTEK ada di `web/public/brand/idtek-icon.png` dan `web/src/app/icon.png` (favicon).
 - Desain mengikuti **Cartogram Design System** (token di `web/src/styles/tokens.css`, komponen di `web/src/components/ui/`).
 
 ## Cara kerja

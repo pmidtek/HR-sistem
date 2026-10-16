@@ -2,13 +2,13 @@
 
 import {
   allowedLeaveActions,
-  allowedReimburseActions,
   leaveStatusLabel,
   type LeaveAction,
 } from "@/lib/calc/approval";
 import { formatDate, formatDayShort, formatDuration } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
 import { actOnLeave, actOnOvertime } from "@/store/actions";
+import { reimburseActionsFor } from "@/store/actions-reimburse";
 import { useState } from "react";
 import { ClaimDetail } from "../reimburse/claim-detail";
 import { ClaimTable } from "../reimburse/claim-table";
@@ -120,7 +120,7 @@ export function ReimburseQueue({ onlyPending }: QueueProps) {
   const [paying, setPaying] = useState<string[] | null>(null);
   const rows = state.reimbursements
     .filter((r) => {
-      const acts = allowedReimburseActions(actor, r.userId, r.status).filter((a) => a !== "resubmit" && a !== "mark_paid");
+      const acts = reimburseActionsFor(state, actor, r).filter((a) => a !== "resubmit" && a !== "mark_paid");
       return onlyPending ? acts.length > 0 : r.userId !== actor.id;
     })
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));

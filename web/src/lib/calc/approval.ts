@@ -8,7 +8,7 @@ import type { ApprovalStatus, ReimbursementStatus, Role } from "../types";
 export type Actor = { id: string; role: Role };
 
 export type LeaveAction = "forward" | "reject" | "approve" | "cancel";
-export type ReimburseAction = "forward" | "revision" | "reject" | "approve" | "resubmit" | "mark_paid";
+export type ReimburseAction = "confirm" | "forward" | "revision" | "reject" | "approve" | "resubmit" | "mark_paid";
 
 export const leaveTransitions: Record<LeaveAction, { from: ApprovalStatus[]; to: ApprovalStatus }> = {
   forward: { from: ["pending_hr"], to: "pending_stakeholder" },
@@ -18,10 +18,12 @@ export const leaveTransitions: Record<LeaveAction, { from: ApprovalStatus[]; to:
 };
 
 export const reimburseTransitions: Record<ReimburseAction, { from: ReimbursementStatus[]; to: ReimbursementStatus }> = {
+  confirm: { from: ["pending_sponsor"], to: "pending_finance" },
   forward: { from: ["pending_finance"], to: "pending_stakeholder" },
-  revision: { from: ["pending_finance"], to: "revision" },
-  reject: { from: ["pending_finance", "pending_stakeholder"], to: "rejected" },
+  revision: { from: ["pending_sponsor", "pending_finance"], to: "revision" },
+  reject: { from: ["pending_sponsor", "pending_finance", "pending_stakeholder"], to: "rejected" },
   approve: { from: ["pending_stakeholder"], to: "approved" },
+  // Pengajuan external kembali ke PIC (pending_sponsor); diatur di actions-reimburse.
   resubmit: { from: ["revision"], to: "pending_finance" },
   mark_paid: { from: ["approved"], to: "paid" },
 };
@@ -45,22 +47,28 @@ export function allowedLeaveActions(
   return out;
 }
 
-/** Aksi yang boleh dilakukan actor pada reimburse. */
-export function allowedReimburseActions(actor: Actor, ownerId: string, status: ReimbursementStatus): ReimburseAction[] {
+/**
+ * Aksi yang boleh dilakukan actor pada reimburse.
+ * `sponsorId` = PIC internal pemilik (hanya untuk pengajuan external).
+ */
+export function allowedReimburseActions(actor: Actor, ownerId: string, status: ReimbursementStatus, sponsorId?: string | null): ReimburseAction[] {
   const isOwner = actor.id === ownerId;
   const out: ReimburseAction[] = [];
   if (isOwner && status === "revision") out.push("resubmit");
+  if (!isOwner && status === "pending_sponsor" && sponsorId && actor.id === sponsorId) out.push("confirm", "revision", "reject");
   if (!isOwner && status === "pending_finance" && actor.role === "finance") out.push("forward", "revision", "reject");
   if (!isOwner && status === "pending_stakeholder" && actor.role === "stakeholder") out.push("approve", "reject");
   // Pembayaran dicatat oleh Finance, HR, atau Stakeholder (wajib upload bukti transfer), bukan pemilik.
-  if (!isOwner && status === "approved" && actor.role !== "employee") out.push("mark_paid");
+  if (!isOwner && status === "approved" && actor.role !== "employee" && actor.role !== "external") out.push("mark_paid");
   return out;
 }
 
-/** Boleh menolak/memulihkan baris tertentu? Hanya peninjau di tahapnya, bukan pemilik. */
-export function canReviewReimburseItems(actor: Actor, ownerId: string, status: ReimbursementStatus): boolean {
+/** Boleh menolak/memulihkan baris tertentu? Hanya peninjau di tahapnya (PIC, Finance, Stakeholder), bukan pemilik. */
+export function canReviewReimburseItems(actor: Actor, ownerId: string, status: ReimbursementStatus, sponsorId?: string | null): boolean {
   if (actor.id === ownerId) return false;
-  return (status === "pending_finance" && actor.role === "finance") || (status === "pending_stakeholder" && actor.role === "stakeholder");
+  return (status === "pending_sponsor" && !!sponsorId && actor.id === sponsorId)
+    || (status === "pending_finance" && actor.role === "finance")
+    || (status === "pending_stakeholder" && actor.role === "stakeholder");
 }
 
 export const leaveStatusLabel: Record<ApprovalStatus, string> = {
@@ -72,6 +80,7 @@ export const leaveStatusLabel: Record<ApprovalStatus, string> = {
 };
 
 export const reimburseStatusLabel: Record<ReimbursementStatus, string> = {
+  pending_sponsor: "Waiting for PIC confirmation",
   pending_finance: "Waiting for Finance review",
   revision: "Needs revision",
   pending_stakeholder: "Waiting for Stakeholder approval",

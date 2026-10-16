@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { useApp, useAuthed } from "@/store/app-provider";
 import { Icon } from "@/components/ui/icon";
 import { IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
+import { sponsorOf } from "@/store/actions-reimburse";
 import { pendingCountFor } from "./pending";
 
 export function Logo() {
@@ -18,6 +19,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { user, team, state, actor } = useAuthed();
   const { toast } = useApp();
   const pending = pendingCountFor(state, actor);
+  // PIC: pengajuan freelancer/vendor yang menunggu konfirmasinya.
+  const toConfirm = state.reimbursements.filter((r) => r.status === "pending_sponsor" && sponsorOf(state, r.userId) === user.id).length;
 
   return (
     <nav className="flex h-full flex-col gap-6 overflow-y-auto px-3 py-5">
@@ -32,7 +35,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <p className="px-2.5 pb-1.5 font-mono text-[10px] tracking-[0.08em] text-fg-subtle uppercase">{group.label}</p>
             {items.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const badge = item.feature === "approvals" ? pending : 0;
+              const badge = item.feature === "approvals" ? pending : item.feature === "reimbursements" ? toConfirm : 0;
               if (!isReleased(item.feature)) {
                 return (
                   <button

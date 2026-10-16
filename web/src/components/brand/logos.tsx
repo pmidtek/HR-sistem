@@ -6,13 +6,30 @@ export function IdtekMark({ className }: { className?: string }) {
   return <Image src="/brand/idtek-icon.png" alt="" width={28} height={28} priority className={cn("size-7", className)} />;
 }
 
-/** Logo aplikasi "idtek dashboard". `tone="light"` untuk latar gelap. */
+export const APP_NAME = "SIDESAH";
+export const APP_FULL_NAME = "Sistem Informasi Data Elektronik Slip & Absensi Harian";
+
+/** Kepanjangan nama dengan huruf awal tiap kata disorot (S·I·D·E·S·A·H). */
+export function AcronymLine({ tone = "auto", className }: { tone?: "auto" | "light"; className?: string }) {
+  return (
+    <span className={cn("inline-flex flex-wrap justify-center gap-x-[0.5em] font-mono tracking-[0.04em]", tone === "light" ? "text-white/55" : "text-fg-subtle", className)} aria-label={APP_FULL_NAME}>
+      {APP_FULL_NAME.split(" ").map((w, i) => (
+        <span key={i} aria-hidden>
+          {w === "&" ? w : <><span className={tone === "light" ? "text-[#f4a261]" : "text-fg-brand"}>{w[0]}</span>{w.slice(1)}</>}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Logo aplikasi: ikon IDTEK + wordmark SIDESAH. `tone="light"` untuk latar gelap. */
 export function IdtekLogo({ tone = "auto", className }: { tone?: "auto" | "light"; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)} title={APP_FULL_NAME}>
       <IdtekMark />
-      <span className={cn("font-mono text-[15px] font-semibold tracking-[-0.02em]", tone === "light" ? "text-white" : "text-fg")}>
-        idtek <span className={cn("font-normal", tone === "light" ? "text-white/55" : "text-fg-muted")}>dashboard</span>
+      <span className="flex flex-col leading-none">
+        <span className={cn("font-display text-[15px] font-semibold tracking-[0.14em]", tone === "light" ? "text-white" : "text-fg")}>{APP_NAME}</span>
+        <span className={cn("mt-1 font-mono text-[9px] tracking-[0.12em] uppercase", tone === "light" ? "text-white/45" : "text-fg-subtle")}>by IDTEK</span>
       </span>
     </span>
   );

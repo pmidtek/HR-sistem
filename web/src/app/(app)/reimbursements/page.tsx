@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { claimGross, inPeriod, stageOf, type PeriodFilter, type Stage } from "@/lib/calc/reimburse";
-import { formatRupiah } from "@/lib/format";
+import { formatDate, formatRupiah } from "@/lib/format";
 import type { Reimbursement } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
 import { ClaimDetail } from "@/components/reimburse/claim-detail";
@@ -17,6 +17,9 @@ import { PageHeader } from "@/components/shell/page-header";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Card } from "@/components/ui/display";
+import { useLookups } from "@/components/hooks";
+import { MyPayoutCard } from "@/components/reimburse/payout-account";
 
 type Editor = { key: number; editing?: Reimbursement } | null;
 
@@ -30,6 +33,7 @@ export default function ReimbursementsPage() {
 
 function ReimbursementsContent() {
   const { state, user, today } = useAuthed();
+  const { userName } = useLookups();
   const [editor, setEditor] = useState<Editor>(null);
   const [period, setPeriod] = useState<PeriodFilter>(() => defaultPeriod(today));
   const [stage, setStage] = useState<Stage | null>(null);
@@ -37,6 +41,12 @@ function ReimbursementsContent() {
   const editorRef = useRef<HTMLDivElement>(null);
 
   const mine = state.reimbursements.filter((r) => r.userId === user.id).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  // Karyawan yang menjadi PIC freelancer/vendor melihat pengajuan mereka untuk dikonfirmasi.
+  const sponsored = state.users.filter((u) => u.role === "external" && u.external?.sponsorId === user.id);
+  const picClaims = state.reimbursements
+    .filter((r) => sponsored.some((u) => u.id === r.userId))
+    .sort((a, b) => Number(b.status === "pending_sponsor") - Number(a.status === "pending_sponsor") || b.submittedAt.localeCompare(a.submittedAt));
+  const toConfirm = picClaims.filter((r) => r.status === "pending_sponsor").length;
   const years = [...new Set(mine.map((r) => Number(r.submittedAt.slice(0, 4))))];
   const inRange = mine.filter((r) => inPeriod(r.submittedAt, period));
   const shown = stage ? inRange.filter((r) => stageOf(r.status) === stage) : inRange;
@@ -44,7 +54,7 @@ function ReimbursementsContent() {
   const router = useRouter();
   const claimParam = useSearchParams().get("claim");
   const activeId = openId ?? claimParam;
-  const open = activeId ? mine.find((r) => r.id === activeId) : undefined;
+  const open = activeId ? [...mine, ...picClaims].find((r) => r.id === activeId) : undefined;
   const closeDetail = () => {
     setOpenId(null);
     if (claimParam) router.replace("/reimbursements", { scroll: false });
@@ -72,6 +82,28 @@ function ReimbursementsContent() {
         <p className="text-sm text-fg-muted">Showing <span className="text-fg">{periodLabel(period)}</span></p>
         <PeriodFilterControl value={period} onChange={(p) => { setPeriod(p); setStage(null); }} today={today} years={years} />
       </div>
+
+      <div className="mb-8 grid gap-4 lg:grid-cols-2">
+        {user.role === "external" && user.external && (
+          <Card padding="md" className="flex flex-col gap-1.5">
+            <h3 className="font-display text-sm font-medium">External account{user.external.company ? ` · ${user.external.company}` : ""}</h3>
+            <p className="text-sm text-fg-muted">Your PIC <span className="text-fg">{userName(user.external.sponsorId)}</span> confirms each claim before Finance reviews it.</p>
+            <p className="text-xs text-fg-subtle">Access until {formatDate(user.external.accessUntil)}. Receipts older than {state.settings.reimburse.maxReceiptAgeDays} days can&apos;t be claimed.</p>
+          </Card>
+        )}
+        <MyPayoutCard />
+      </div>
+
+      {sponsored.length > 0 && (
+        <CollapsibleSection
+          id="emp-pic"
+          title="Confirm as PIC"
+          summary={`${toConfirm} waiting · externals: ${sponsored.map((u) => u.name).join(", ")}`}
+          className="mb-8"
+        >
+          <ClaimTable list={picClaims} onOpen={setOpenId} showOwner empty="No claims from your externals" />
+        </CollapsibleSection>
+      )}
 
       <CollapsibleSection id="emp-overview" title="Overview" summary={`${formatRupiah(inRange.reduce((t, r) => t + claimGross(r), 0))} · ${inRange.length} claim(s)`} className="mb-8">
         <StatusFlow list={inRange} selected={stage} onSelect={setStage} title="Total submitted" />

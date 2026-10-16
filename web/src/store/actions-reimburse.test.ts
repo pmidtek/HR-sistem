@@ -17,7 +17,7 @@ describe("alur reimburse per grup", () => {
   const claim = s1.reimbursements[0];
 
   it("pengajuan baru jadi satu grup dengan nomor urut", () => {
-    expect(claim).toMatchObject({ userId: "u4", status: "pending_finance", number: "RB-2610-004" });
+    expect(claim).toMatchObject({ userId: "u4", status: "pending_finance", number: "RB-2610-006" });
     expect(claim.items).toHaveLength(2);
   });
 

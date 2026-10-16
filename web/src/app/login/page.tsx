@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApp } from "@/store/app-provider";
-import { IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
+import { AcronymLine, APP_NAME, IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
 import { GradientBackdrop } from "@/components/login/gradient-backdrop";
 import { LoginIllustration } from "@/components/login/login-illustration";
 import { LoginModal, type LoginTab } from "@/components/login/login-modal";
@@ -41,12 +41,15 @@ export default function LoginPage() {
         </motion.div>
         <motion.h1
           {...rise(0.1)}
-          className="mt-14 font-mono text-4xl font-semibold tracking-[-0.04em] sm:text-7xl"
-          style={{ textShadow: "0 0 40px rgba(243,106,29,0.45), 0 0 90px rgba(243,106,29,0.25)" }}
+          className="mt-14 bg-gradient-to-b from-white via-white to-[#f4a261] bg-clip-text pl-[0.12em] font-display text-6xl font-semibold tracking-[0.12em] text-transparent sm:text-8xl"
+          style={{ filter: "drop-shadow(0 0 36px rgba(243,106,29,0.35))" }}
         >
-          idtek <span className="font-normal text-[#f4a261]">dashboard</span>
+          {APP_NAME}
         </motion.h1>
-        <motion.p {...rise(0.18)} className="mt-4 text-sm text-white/65 sm:text-base">
+        <motion.div {...rise(0.16)} className="mt-4 max-w-2xl text-[11px] uppercase sm:text-xs">
+          <AcronymLine tone="light" />
+        </motion.div>
+        <motion.p {...rise(0.22)} className="mt-5 text-sm text-white/65 sm:text-base">
           Reimbursement, timesheet, leave, and payroll in one place.
         </motion.p>
         <motion.div {...rise(0.26)} className="mt-8 flex flex-wrap items-center justify-center gap-3">

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { allowedReimburseActions } from "@/lib/calc/approval";
 import { claimTotal, inPeriod, stageOf, type PeriodFilter } from "@/lib/calc/reimburse";
 import { formatDate, formatPeriod, formatRupiah } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
+import { reimburseActionsFor } from "@/store/actions-reimburse";
 import { BarChart } from "../charts/bar-chart";
 import { useLookups } from "../hooks";
 import { stageMeta } from "../reimburse/parts";
@@ -27,8 +27,8 @@ export function ReimburseCompanySection() {
   const all = state.reimbursements;
   const years = [...new Set(all.map((r) => Number(r.submittedAt.slice(0, 4))))];
   const inRange = all.filter((r) => inPeriod(r.submittedAt, period));
-  const acts = (r: (typeof all)[number]) => allowedReimburseActions(actor, r.userId, r.status);
-  const toReview = all.filter((r) => acts(r).some((a) => a === "forward" || a === "approve"));
+  const acts = (r: (typeof all)[number]) => reimburseActionsFor(state, actor, r);
+  const toReview = all.filter((r) => acts(r).some((a) => a === "confirm" || a === "forward" || a === "approve"));
   const toPay = all.filter((r) => acts(r).includes("mark_paid"));
   const overdue = toPay.filter((r) => payDate(r.submittedAt) < today);
   const queue = [...toReview, ...toPay].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));

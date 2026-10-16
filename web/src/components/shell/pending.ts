@@ -1,4 +1,5 @@
-import { allowedLeaveActions, allowedReimburseActions, type Actor } from "@/lib/calc/approval";
+import { allowedLeaveActions, type Actor } from "@/lib/calc/approval";
+import { reimburseActionsFor } from "@/store/actions-reimburse";
 import type { DataState } from "@/store/state";
 
 export type PendingCounts = { leave: number; overtime: number; reimburse: number; payroll: number };
@@ -10,7 +11,7 @@ export function pendingFor(s: DataState, actor: Actor): PendingCounts {
     leave: s.leaveRequests.filter((r) => reviewable(allowedLeaveActions(actor, r.userId, r.status))).length,
     overtime: s.overtimeRequests.filter((r) => reviewable(allowedLeaveActions(actor, r.userId, r.status))).length,
     reimburse: s.reimbursements.filter((r) => {
-      const acts = allowedReimburseActions(actor, r.userId, r.status);
+      const acts = reimburseActionsFor(s, actor, r);
       return acts.length > 0 && !acts.includes("resubmit") && !acts.includes("mark_paid");
     }).length,
     payroll: s.payrollRuns.filter((r) => actor.role === "stakeholder" && r.status === "pending").length,

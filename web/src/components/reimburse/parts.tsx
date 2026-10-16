@@ -10,7 +10,7 @@ export function formatUsd(cents: number): string {
 
 /** Warna & label tiap tahap alur reimburse (dipakai infografik, tabel, dan dashboard). */
 export const stageMeta: Record<Stage, { label: string; short: string; color: string }> = {
-  finance: { label: "Finance review", short: "Finance review", color: "var(--chart-2)" },
+  finance: { label: "In review (PIC / Finance)", short: "In review", color: "var(--chart-2)" },
   stakeholder: { label: "Stakeholder approval", short: "Approval", color: "#a78bfa" },
   revision: { label: "Needs revision", short: "Revision", color: "#94a3b8" },
   unpaid: { label: "Approved, not paid yet", short: "Ready to pay", color: "var(--warning)" },

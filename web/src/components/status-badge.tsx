@@ -15,6 +15,7 @@ export function ApprovalBadge({ status }: { status: ApprovalStatus }) {
 }
 
 const reimburseTone: Record<ReimbursementStatus, BadgeTone> = {
+  pending_sponsor: "warning",
   pending_finance: "warning",
   revision: "danger",
   pending_stakeholder: "brand",

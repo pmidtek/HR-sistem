@@ -1,4 +1,10 @@
-import type { ApprovalLog, FileRef, Reimbursement, ReimbursementCategory, ReimbursementItem } from "../types";
+import type { ApprovalLog, FileRef, Reimbursement, ReimbursementCategory, ReimbursementItem, ReimbursePayment } from "../types";
+import { users } from "./people";
+
+/** Batas wajar per baris (Rp), contoh awal; bisa diubah di Settings → Categories. */
+const limits: Record<string, number> = {
+  Transportation: 1_000_000, "Meals Expenses": 750_000, Entertain: 1_000_000, Accommodation: 1_500_000, "Business Trip": 2_500_000,
+};
 
 /** Kategori sesuai form reimburse perusahaan. Bisa diubah di Pengaturan → Kategori reimburse. */
 export const reimbursementCategories: ReimbursementCategory[] = [
@@ -6,7 +12,7 @@ export const reimbursementCategories: ReimbursementCategory[] = [
   "Legal Fees", "License Fees", "Office Supplies", "Household Expense", "Meals Expenses", "Software", "Subscriptions",
   "Work Clothing", "Tools", "Fixed Asset", "Office Rent", "Tax Expenses", "Donation", "Business Trip", "Accommodation",
   "Marketing Expense", "Entertain", "Promotion", "Admin Bank",
-].map((name) => ({ id: name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-"), name }));
+].map((name) => ({ id: name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-"), name, limitPerItem: limits[name] ?? null }));
 
 /** File contoh di public/samples supaya bukti di data demo bisa dibuka. */
 function sample(name: string, categoryId = ""): FileRef {
@@ -16,6 +22,10 @@ function sample(name: string, categoryId = ""): FileRef {
   return { name, url: "/samples/receipt-general.png" };
 }
 const proof = (name: string): FileRef[] => [{ name, url: "/samples/transfer-proof.png" }];
+function paidTo(userId: string): ReimbursePayment["toAccount"] {
+  const a = users.find((u) => u.id === userId)?.bankAccount;
+  return a ? { bankName: a.bankName, accountNumber: a.accountNumber, accountHolder: a.accountHolder } : null;
+}
 
 const log = (at: string, byUserId: string, from: string | null, to: string, note?: string): ApprovalLog => ({ at, byUserId, from, to, note });
 
@@ -24,7 +34,11 @@ let n = 0;
 type Row = [string, string, string, string | null, number | null, number, string[], string?];
 const items = (rows: Row[]): ReimbursementItem[] =>
   rows.map(([date, description, categoryId, projectCode, amountUsdCents, amount, files, declined]) => ({
-    id: `rbi${++n}`, date, description, categoryId, projectCode, amountUsdCents, amount, files: files.map((f) => sample(f, categoryId)),
+    id: `rbi${++n}`, date, description, categoryId, projectCode, amountUsdCents, amount, files: files.map((f) => {
+      // "nama#hash" → hash dipakai untuk demo deteksi file ganda.
+      const [name, hash] = f.split("#");
+      return hash ? { ...sample(name, categoryId), hash } : sample(name, categoryId);
+    }),
     declined: declined ? { note: declined, byUserId: "u3" } : null,
   }));
 
@@ -46,9 +60,24 @@ export const reimbursements: Reimbursement[] = [
     status: "pending_finance", paidAt: null, payment: null, logs: [log("2026-10-06T19:00:00+07:00", "u4", null, "pending_finance")],
   },
   {
+    // External (freelance): menunggu konfirmasi PIC (Andi). Ada baris akhir pekan sebagai contoh tanda risiko.
+    id: "rb15", number: "RB-2610-005", userId: "u11", title: "Video shoot for client demo", submittedAt: "2026-10-12",
+    items: items([
+      ["2026-10-10", "Camera & lighting rental (1 day)", "tools", "OP260015", null, 1_200_000, ["rental-invoice.pdf"]],
+      ["2026-10-11", "Grab with equipment to client site", "transportation", "OP260015", null, 165_000, ["grab-rafi.jpg"]],
+    ]),
+    status: "pending_sponsor", paidAt: null, payment: null, logs: [log("2026-10-12T20:00:00+07:00", "u11", null, "pending_sponsor")],
+  },
+  {
+    // Contoh tanda "struk ganda": tanggal, nominal, kategori & file sama persis dengan RB-2610-003 milik Andi.
+    id: "rb17", number: "RB-2610-004", userId: "u7", title: "Client visit", submittedAt: "2026-10-08",
+    items: items([["2026-10-05", "Grab to client office", "transportation", "OP260015", null, 98_000, ["grab.jpg#demo-grab-1005"]]]),
+    status: "pending_finance", paidAt: null, payment: null, logs: [log("2026-10-08T18:00:00+07:00", "u7", null, "pending_finance")],
+  },
+  {
     id: "rb14", number: "RB-2610-003", userId: "u5", title: "Client meeting in Bekasi", submittedAt: "2026-10-05",
     items: items([
-      ["2026-10-05", "Grab to client office", "transportation", "OP260015", null, 98_000, ["grab.jpg"]],
+      ["2026-10-05", "Grab to client office", "transportation", "OP260015", null, 98_000, ["grab.jpg#demo-grab-1005"]],
       ["2026-10-05", "Lunch with client (3 people)", "meals-expenses", "OP260015", null, 285_000, ["receipt.jpg"]],
     ]),
     status: "approved", paidAt: null, payment: null, logs: full("u5", "2026-10-05"),
@@ -102,7 +131,7 @@ export const reimbursements: Reimbursement[] = [
       ["2026-09-04", "Train Jakarta–Bandung round trip", "business-trip", "PR260005", null, 680_000, ["tiket-pergi.pdf", "tiket-pulang.pdf"]],
       ["2026-09-15", "Hotel, 1 night", "accommodation", "PR260005", null, 1_250_000, ["hotel.pdf", "kwitansi.jpg"]],
     ]),
-    status: "paid", paidAt: "2026-09-25", payment: { date: "2026-09-25", method: "payroll", reference: "Payroll Sep 2026", proofFiles: proof("bukti-transfer-2026-09-25.jpg"), byUserId: "u3" }, logs: full("u6", "2026-09-16", "2026-09-25"),
+    status: "paid", paidAt: "2026-09-25", payment: { date: "2026-09-25", method: "payroll", reference: "Payroll Sep 2026", proofFiles: proof("bukti-transfer-2026-09-25.jpg"), toAccount: null, byUserId: "u3" }, logs: full("u6", "2026-09-16", "2026-09-25"),
   },
   {
     id: "rb8", number: "RB-2608-002", userId: "u4", title: "Domain & SSL", submittedAt: "2026-08-05",
@@ -110,12 +139,12 @@ export const reimbursements: Reimbursement[] = [
       ["2026-08-05", "Domain .co.id, 1 year", "license-fees", "PR260003", null, 350_000, ["invoice-domain.pdf"]],
       ["2026-08-05", "Wildcard SSL, 1 year", "software", "PR260003", 4_600, 750_000, ["invoice-ssl.pdf"]],
     ]),
-    status: "paid", paidAt: "2026-08-25", payment: { date: "2026-08-25", method: "transfer", reference: "TRF-0825-11", proofFiles: proof("bukti-transfer-2026-08-25.jpg"), byUserId: "u3" }, logs: full("u4", "2026-08-05", "2026-08-25"),
+    status: "paid", paidAt: "2026-08-25", payment: { date: "2026-08-25", method: "transfer", reference: "TRF-0825-11", proofFiles: proof("bukti-transfer-2026-08-25.jpg"), toAccount: paidTo("u4"), byUserId: "u3" }, logs: full("u4", "2026-08-05", "2026-08-25"),
   },
   {
     id: "rb9", number: "RB-2608-001", userId: "u5", title: "Client dinner August", submittedAt: "2026-08-21",
     items: items([["2026-08-21", "Client dinner, Fleet Tracking project", "entertain", "OP260015", null, 515_000, ["nota.jpg"]]]),
-    status: "paid", paidAt: "2026-08-25", payment: { date: "2026-08-25", method: "transfer", reference: "TRF-0825-12", proofFiles: proof("bukti-transfer-2026-08-25.jpg"), byUserId: "u3" }, logs: full("u5", "2026-08-21", "2026-08-25"),
+    status: "paid", paidAt: "2026-08-25", payment: { date: "2026-08-25", method: "transfer", reference: "TRF-0825-12", proofFiles: proof("bukti-transfer-2026-08-25.jpg"), toAccount: paidTo("u5"), byUserId: "u3" }, logs: full("u5", "2026-08-21", "2026-08-25"),
   },
   {
     id: "rb10", number: "RB-2607-001", userId: "u9", title: "Client visit Surabaya", submittedAt: "2026-07-19",
@@ -123,7 +152,7 @@ export const reimbursements: Reimbursement[] = [
       ["2026-07-18", "Hotel for client visit", "accommodation", "OP260012", null, 950_000, ["hotel.pdf"]],
       ["2026-07-18", "Fuel and toll", "transportation", "OP260012", null, 230_000, ["spbu.jpg", "tol.jpg"]],
     ]),
-    status: "paid", paidAt: "2026-07-25", payment: { date: "2026-07-25", method: "transfer", reference: "TRF-0725-04", proofFiles: proof("bukti-transfer-2026-07-25.jpg"), byUserId: "u3" }, logs: full("u9", "2026-07-19", "2026-07-25"),
+    status: "paid", paidAt: "2026-07-25", payment: { date: "2026-07-25", method: "transfer", reference: "TRF-0725-04", proofFiles: proof("bukti-transfer-2026-07-25.jpg"), toAccount: paidTo("u9"), byUserId: "u3" }, logs: full("u9", "2026-07-19", "2026-07-25"),
   },
   {
     id: "rb11", number: "RB-2606-002", userId: "u6", title: "Workshop material printing", submittedAt: "2026-06-11",
@@ -134,7 +163,7 @@ export const reimbursements: Reimbursement[] = [
   {
     id: "rb12", number: "RB-2606-001", userId: "u8", title: "Team overtime meals", submittedAt: "2026-06-24",
     items: items([["2026-06-24", "Team overtime meals (6 people)", "meals-expenses", "INTERNAL", null, 180_000, ["nota.jpg"]]]),
-    status: "paid", paidAt: "2026-06-25", payment: { date: "2026-06-25", method: "transfer", reference: "TRF-0625-02", proofFiles: proof("bukti-transfer-2026-06-25.jpg"), byUserId: "u3" }, logs: full("u8", "2026-06-24", "2026-06-25"),
+    status: "paid", paidAt: "2026-06-25", payment: { date: "2026-06-25", method: "transfer", reference: "TRF-0625-02", proofFiles: proof("bukti-transfer-2026-06-25.jpg"), toAccount: paidTo("u8"), byUserId: "u3" }, logs: full("u8", "2026-06-24", "2026-06-25"),
   },
   {
     id: "rb13", number: "RB-2605-001", userId: "u7", title: "Internet & phone credit for remote work", submittedAt: "2026-05-27",
@@ -142,6 +171,19 @@ export const reimbursements: Reimbursement[] = [
       ["2026-05-20", "Home internet, May", "internet", null, null, 350_000, ["tagihan.pdf"]],
       ["2026-05-20", "Phone credit for client calls", "telephone", null, null, 100_000, ["pulsa.jpg"]],
     ]),
-    status: "paid", paidAt: "2026-06-25", payment: { date: "2026-06-25", method: "payroll", reference: "Payroll Jun 2026", proofFiles: proof("bukti-transfer-2026-06-25.jpg"), byUserId: "u3" }, logs: full("u7", "2026-05-27", "2026-06-25"),
+    status: "paid", paidAt: "2026-06-25", payment: { date: "2026-06-25", method: "payroll", reference: "Payroll Jun 2026", proofFiles: proof("bukti-transfer-2026-06-25.jpg"), toAccount: null, byUserId: "u3" }, logs: full("u7", "2026-05-27", "2026-06-25"),
+  },
+  {
+    id: "rb16", number: "RB-2609-007", userId: "u11", title: "Product photo session", submittedAt: "2026-09-14",
+    items: items([["2026-09-12", "Studio rental (half day)", "tools", "OP260012", null, 750_000, ["studio-invoice.pdf"]]]),
+    status: "paid", paidAt: "2026-09-18",
+    payment: { date: "2026-09-18", method: "transfer", reference: "TRF-0918-03", proofFiles: proof("bukti-transfer-2026-09-18.jpg"), toAccount: paidTo("u11"), byUserId: "u3" },
+    logs: [
+      log("2026-09-14T18:00:00+07:00", "u11", null, "pending_sponsor"),
+      log("2026-09-15T09:00:00+07:00", "u5", "pending_sponsor", "pending_finance"),
+      log("2026-09-15T14:00:00+07:00", "u3", "pending_finance", "pending_stakeholder"),
+      log("2026-09-16T10:00:00+07:00", "u1", "pending_stakeholder", "approved"),
+      log("2026-09-18T10:00:00+07:00", "u3", "approved", "paid"),
+    ],
   },
 ];

@@ -12,6 +12,7 @@ import { EmptyState } from "../ui/display";
 import { Icon } from "../ui/icon";
 import { Table, Td, Th, Tr } from "../ui/table";
 import { PaymentBadge } from "./parts";
+import { RiskBadge } from "./risk-panel";
 import { usePayDate } from "./use-pay-date";
 
 type Props = {
@@ -26,7 +27,8 @@ type Props = {
 /** Satu baris = satu pengajuan (grup). Klik untuk buka detail. */
 export function ClaimTable({ list, onOpen, showOwner, selection, empty = "No claims yet" }: Props) {
   const { userName } = useLookups();
-  const { today } = useApp();
+  const { today, state } = useApp();
+  const externals = new Set(state.users.filter((u) => u.role === "external").map((u) => u.id));
   const payDate = usePayDate();
   if (list.length === 0) return <EmptyState title={empty} description="Try a different period or filter." />;
   const selectable = selection ? list.filter((r) => selection.selectable.has(r.id)) : [];
@@ -72,11 +74,16 @@ export function ClaimTable({ list, onOpen, showOwner, selection, empty = "No cla
               )}
               <Td className="font-mono text-xs whitespace-nowrap text-fg-muted">{r.number}</Td>
               <Td className="min-w-56">
-                <p className="text-sm">{r.title}</p>
+                <p className="flex flex-wrap items-center gap-2 text-sm">{r.title} {showOwner && <RiskBadge claim={r} />}</p>
                 <p className="text-xs text-fg-subtle">Submitted {formatDate(r.submittedAt)} · {r.items.length} {r.items.length === 1 ? "item" : "items"}</p>
                 {reason && <p className="mt-1 text-xs text-fg-danger">Reason: {reason}</p>}
               </Td>
-              {showOwner && <Td className="whitespace-nowrap">{userName(r.userId)}</Td>}
+              {showOwner && (
+                <Td className="whitespace-nowrap">
+                  <p>{userName(r.userId)}</p>
+                  {externals.has(r.userId) && <p className="text-[11px] text-fg-brand">External</p>}
+                </Td>
+              )}
               <Td className="text-right whitespace-nowrap">
                 <p className="font-mono">{formatRupiah(r.status === "rejected" ? claimGross(r) : claimTotal(r))}</p>
                 {declined > 0 && r.status !== "rejected" && <p className="text-xs text-fg-danger">−{formatRupiah(declined)} declined</p>}
@@ -84,7 +91,7 @@ export function ClaimTable({ list, onOpen, showOwner, selection, empty = "No cla
               <Td><ReimburseBadge status={r.status === "paid" ? "approved" : r.status} /></Td>
               <Td>
                 <PaymentBadge r={r} />
-                {(r.status === "approved" || r.status === "pending_finance" || r.status === "pending_stakeholder") && (
+                {(r.status === "approved" || r.status === "pending_sponsor" || r.status === "pending_finance" || r.status === "pending_stakeholder") && (
                   <p className={cn("mt-1 text-[11px] whitespace-nowrap", r.status === "approved" && payDate(r.submittedAt) < today ? "text-fg-danger" : "text-fg-subtle")}>
                     {r.status === "approved" && payDate(r.submittedAt) < today ? "Overdue · was due " : "Est. pay "}{formatDayShort(payDate(r.submittedAt))}
                   </p>

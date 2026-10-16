@@ -2,11 +2,11 @@
 
 import { Download, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
-import { allowedReimburseActions } from "@/lib/calc/approval";
 import { claimTotal, inPeriod, recapBy, stageOf, type PeriodFilter, type Stage } from "@/lib/calc/reimburse";
 import { cn } from "@/lib/cn";
 import { formatRupiah } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
+import { reimburseActionsFor } from "@/store/actions-reimburse";
 import { useLookups } from "@/components/hooks";
 import { ClaimDetail } from "@/components/reimburse/claim-detail";
 import { ClaimTable } from "@/components/reimburse/claim-table";
@@ -46,7 +46,7 @@ export default function ReimburseRecapPage() {
   );
   const inRange = base.filter((r) => inPeriod(r.submittedAt, period));
   const list = (stage ? inRange.filter((r) => stageOf(r.status) === stage) : inRange).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
-  const payable = new Set(list.filter((r) => allowedReimburseActions(actor, r.userId, r.status).includes("mark_paid")).map((r) => r.id));
+  const payable = new Set(list.filter((r) => reimburseActionsFor(state, actor, r).includes("mark_paid")).map((r) => r.id));
   const selected = [...picked].filter((id) => payable.has(id));
   const selectedTotal = state.reimbursements.filter((r) => selected.includes(r.id)).reduce((s, r) => s + claimTotal(r), 0);
   const overdue = base.filter((r) => r.status === "approved" && payDate(r.submittedAt) < today);
