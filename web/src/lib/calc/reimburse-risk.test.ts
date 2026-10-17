@@ -54,9 +54,9 @@ describe("anti-fraud: tanda risiko", () => {
     expect(maskAccount("1234 5678 90")).toBe("•••• 7890");
   });
 
-  it("struk lebih tua dari batas tidak bisa diajukan", () => {
-    const row = { date: "2026-07-01", description: "x", categoryId: "c", projectCode: null, amountUsdCents: null, amount: 1, files: [{ name: "a", url: null }] };
-    expect(validateReimburseRow(row, "2026-10-16", 60).date).toContain("older than 60 days");
-    expect(validateReimburseRow({ ...row, date: "2026-09-01" }, "2026-10-16", 60)).toEqual({});
+  it("struk lebih tua dari 6 bulan tidak bisa diajukan", () => {
+    const row = { date: "2026-04-15", description: "x", categoryId: "c", projectCode: null, amountUsdCents: null, amount: 1, files: [{ name: "a", url: null }] };
+    expect(validateReimburseRow(row, "2026-10-16", 6).date).toContain("older than 6 months");
+    expect(validateReimburseRow({ ...row, date: "2026-04-16" }, "2026-10-16", 6)).toEqual({});
   });
 });

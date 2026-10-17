@@ -8,13 +8,13 @@ import { roleLabel } from "@/lib/access";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { useAuthed } from "@/store/app-provider";
-import { markNotificationsRead } from "@/store/actions-business";
+import { useOps } from "@/store/ops";
 import { Avatar, Eyebrow } from "@/components/ui/display";
 import { IconButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const { user, team, today, theme, toggleTheme, logout } = useAuthed();
+  const { user, team, today, theme, toggleTheme, logout, backend } = useAuthed();
   const router = useRouter();
 
   return (
@@ -23,7 +23,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <Icon icon={Menu} size={18} />
       </IconButton>
       <div className="hidden md:block">
-        <Eyebrow tone="success">Demo data · {formatDate(today)}</Eyebrow>
+        <Eyebrow tone="success">{backend ? "" : "Demo data · "}{formatDate(today)}</Eyebrow>
       </div>
       <div className="flex-1" />
       <IconButton label={theme === "dark" ? "Light mode" : "Dark mode"} onClick={toggleTheme}>
@@ -54,7 +54,8 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 }
 
 function NotificationBell() {
-  const { state, user, run } = useAuthed();
+  const { state, user } = useAuthed();
+  const ops = useOps();
   const mine = state.notifications.filter((n) => n.userId === user.id);
   const unread = mine.filter((n) => !n.read).length;
 
@@ -86,7 +87,7 @@ function NotificationBell() {
               <button
                 type="button"
                 className="text-xs text-fg-brand hover:underline"
-                onClick={() => run((s) => markNotificationsRead(s, user.id))}
+                onClick={() => void ops.markRead()}
               >
                 Mark all as read
               </button>
@@ -98,7 +99,7 @@ function NotificationBell() {
               <Popover.Close asChild key={n.id}>
                 <Link
                   href={n.href}
-                  onClick={() => run((s) => markNotificationsRead(s, user.id, [n.id]))}
+                  onClick={() => !n.read && void ops.markRead([n.id])}
                   className={cn("flex gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-hover", !n.read && "bg-brand-subtle/40")}
                 >
                   <span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", n.read ? "bg-transparent" : "bg-brand")} />

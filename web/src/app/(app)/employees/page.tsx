@@ -9,7 +9,7 @@ import { formatDate, formatRupiah } from "@/lib/format";
 import { salaryProfiles } from "@/lib/mock/payroll";
 import type { User } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { verifyBankAccount } from "@/store/actions-bank";
+import { useOps } from "@/store/ops";
 import { EmployeeDialog, type EmployeeDraft } from "@/components/employees/employee-dialog";
 import { canSeeFullAccount } from "@/components/reimburse/payout-account";
 import { PageHeader } from "@/components/shell/page-header";
@@ -24,7 +24,8 @@ import { Tabs } from "@/components/ui/tabs";
 type Filter = "all" | "employees" | "externals" | "unverified";
 
 export default function EmployeesPage() {
-  const { state, user, team, actor, today, run } = useAuthed();
+  const { state, user, team, actor, today } = useAuthed();
+  const ops = useOps();
   const editable = canEdit(user, team, "employees");
   const seeSalary = isReleased("payroll") && (user.role === "finance" || user.role === "stakeholder");
   const showLeave = isReleased("leave");
@@ -109,7 +110,7 @@ export default function EmployeesPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-xs">{a.bankName} <span className="font-mono">{canSeeFullAccount(user, u.id) ? a.accountNumber : maskAccount(a.accountNumber)}</span></span>
                       {a.verified ? <Badge tone="success" dot>Verified</Badge> : actor.role === "finance" && actor.id !== u.id ? (
-                        <Button size="small" iconLeft={<Icon icon={BadgeCheck} size={14} />} onClick={() => run((s) => verifyBankAccount(s, u.id, actor), "Bank account verified.")}>Verify</Button>
+                        <Button size="small" iconLeft={<Icon icon={BadgeCheck} size={14} />} onClick={() => void ops.verifyBank(u.id, "Bank account verified.")}>Verify</Button>
                       ) : <Badge tone="warning" dot>Not verified</Badge>}
                     </div>
                   )}

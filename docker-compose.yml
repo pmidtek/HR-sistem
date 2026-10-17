@@ -1,0 +1,51 @@
+# Backend SIDESAH: Directus (API + admin + auth + file) di atas PostgreSQL.
+# Jalankan: docker compose up -d   → Directus di http://localhost:8055
+# Semua rahasia diambil dari file .env (salin dari .env.example).
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-directus}
+      POSTGRES_USER: ${DB_USER:-directus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Isi DB_PASSWORD di .env}
+      TZ: Asia/Jakarta
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-directus} -d ${DB_DATABASE:-directus}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  directus:
+    # Directus 11.17.4 + extension SIDESAH (lihat directus/Dockerfile). v12 tidak dipakai: versi gratisnya
+    # dibatasi 25 tabel & tanpa login Microsoft.
+    build:
+      context: .
+      dockerfile: directus/Dockerfile
+    image: sidesah-directus:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${DIRECTUS_PORT:-8055}:8055"
+    env_file: .env
+    environment:
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      TZ: Asia/Jakarta
+    volumes:
+      - uploads:/directus/uploads
+      - ./directus/snapshots:/directus/snapshots
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8055/server/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  pgdata:
+  uploads:

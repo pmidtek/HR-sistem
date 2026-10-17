@@ -1,0 +1,19 @@
+{
+  "name": "sidesah-directus",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bootstrap": "tsx scripts/setup.ts",
+    "schema:apply": "tsx scripts/apply-schema.ts",
+    "access:apply": "tsx scripts/apply-access.ts",
+    "seed": "tsx scripts/seed.ts",
+    "seed:demo": "tsx scripts/seed.ts --demo",
+    "snapshot": "docker compose -f ../docker-compose.yml exec directus node /directus/cli.js schema snapshot --yes /directus/snapshots/schema.yaml",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { roleLabel } from "@/lib/access";
 import type { Role, User } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { saveUser } from "@/store/actions-business";
+import { useOps } from "@/store/ops";
 import { BankAccountDialog, PayoutAccountLine, useVerifyAccount } from "../reimburse/payout-account";
 import { Button } from "../ui/button";
 import { Combobox } from "../ui/combobox";
@@ -15,8 +15,11 @@ export type EmployeeDraft = Omit<User, "id" | "employeeCode"> & { id?: string; e
 
 /** Tambah/ubah pegawai atau external (freelance/vendor). Rekening diubah lewat dialog terpisah (perlu verifikasi). */
 export function EmployeeDialog({ draft, onClose }: { draft: EmployeeDraft; onClose: () => void }) {
-  const { state, run } = useAuthed();
+  const { state, backend, ssoEnabled } = useAuthed();
+  const ops = useOps();
   const [d, setD] = useState<EmployeeDraft>(draft);
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
   const saved = d.id ? state.users.find((u) => u.id === d.id) : undefined;
   const verify = useVerifyAccount(d.id ?? "");
@@ -37,13 +40,18 @@ export function EmployeeDialog({ draft, onClose }: { draft: EmployeeDraft; onClo
       footer={
         <>
           <Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => run((s) => saveUser(s, d), isExternal ? "External saved." : "Employee saved.") && onClose()}>Save</Button>
+          <Button disabled={busy} onClick={async () => {
+            setBusy(true);
+            const ok = await ops.saveUser({ ...d, password }, isExternal ? "External saved." : "Employee saved.");
+            setBusy(false);
+            if (ok) onClose();
+          }}>{busy ? "Saving…" : "Save"}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
         <Input label="Full name" value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} />
-        <Input label={isExternal ? "Email" : "Work email"} type="email" value={d.email} onChange={(e) => setD({ ...d, email: e.target.value })} helperText={isExternal ? "Used to sign in. Externals can't use the office Microsoft account." : "Used to sign in (Microsoft sign-in coming soon)."} />
+        <Input label={isExternal ? "Email" : "Work email"} type="email" value={d.email} onChange={(e) => setD({ ...d, email: e.target.value })} helperText={isExternal ? "Used to sign in. Externals can't use the office Microsoft account." : ssoEnabled ? "They sign in with their office Microsoft account." : "Used to sign in."} />
         <div className="grid grid-cols-2 gap-3">
           <Select label="Role" value={d.role} onChange={(e) => setRole(e.target.value as Role)} options={Object.entries(roleLabel).map(([value, label]) => ({ value, label }))} />
           <Select label="Team" value={d.teamId} onChange={(e) => setD({ ...d, teamId: e.target.value })} options={state.teams.map((t) => ({ value: t.id, label: t.name }))} />
@@ -61,6 +69,17 @@ export function EmployeeDialog({ draft, onClose }: { draft: EmployeeDraft; onClo
               <Input label="Access until" type="date" value={ext.accessUntil} onChange={(e) => setD({ ...d, external: { ...ext, accessUntil: e.target.value } })} helperText="Usually the contract end date." />
             </div>
           </div>
+        )}
+
+        {backend && (isExternal || !ssoEnabled) && (
+          <Input
+            label={d.id ? "New password (optional)" : "Initial password"}
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            helperText={d.id ? "Fill only to reset their password." : "At least 8 characters. Share it with the person privately; they can change it later."}
+          />
         )}
 
         <Switch checked={d.active} onChange={(v) => setD({ ...d, active: v })} label={isExternal ? "Access active" : "Active employee"} />

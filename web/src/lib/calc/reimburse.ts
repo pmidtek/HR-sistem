@@ -1,16 +1,21 @@
 import type { Reimbursement, ReimbursementItem, ReimbursementStatus } from "../types";
-import { addDays, dayOfWeek } from "./dates";
+import { addDays, addMonths, dayOfWeek } from "./dates";
 
 /** Satu baris di lembar input reimburse (sebelum disimpan). */
 export type ReimburseRowInput = Pick<ReimbursementItem, "date" | "description" | "categoryId" | "projectCode" | "amountUsdCents" | "amount" | "files">;
 
 export type RowErrors = Partial<Record<keyof ReimburseRowInput, string>>;
 
-/** `maxAgeDays` = umur maksimal struk (hari); lebih tua dari itu ditolak supaya struk lama tidak "didaur ulang". */
-export function validateReimburseRow(row: ReimburseRowInput, today: string, maxAgeDays?: number): RowErrors {
+/** Tanggal struk paling lama yang masih boleh diajukan (16 Okt, 6 bulan → 16 Apr). */
+export function oldestReceiptDate(today: string, maxAgeMonths: number): string {
+  return addMonths(today, -maxAgeMonths);
+}
+
+/** `maxAgeMonths` = umur maksimal struk (bulan); lebih tua dari itu ditolak supaya struk lama tidak "didaur ulang". */
+export function validateReimburseRow(row: ReimburseRowInput, today: string, maxAgeMonths?: number): RowErrors {
   const e: RowErrors = {};
   if (!row.date || row.date > today) e.date = "Date can't be in the future.";
-  else if (maxAgeDays && row.date < addDays(today, -maxAgeDays)) e.date = `Receipts older than ${maxAgeDays} days can't be claimed.`;
+  else if (maxAgeMonths && row.date < oldestReceiptDate(today, maxAgeMonths)) e.date = `Receipts older than ${maxAgeMonths} months can't be claimed.`;
   if (!row.description.trim()) e.description = "Description is required.";
   if (!row.categoryId) e.categoryId = "Pick a category.";
   if (row.amountUsdCents !== null && (!Number.isInteger(row.amountUsdCents) || row.amountUsdCents <= 0)) e.amountUsdCents = "Invalid USD amount.";
@@ -151,6 +156,47 @@ export function sumItemsBy(list: Reimbursement[], key: (i: ReimbursementItem) =>
   }
   return out;
 }
+
+/** Bulan pengajuan (YYYY-MM); dasar rekap bulanan. */
+export const claimMonth = (r: Pick<Reimbursement, "submittedAt">) => r.submittedAt.slice(0, 7);
+
+/** Rangkaian bulan [from..to] (YYYY-MM, inklusif). */
+export function monthSpan(from: string, to: string): string[] {
+  const out: string[] = [];
+  for (let m = from; m <= to && out.length < 120; m = addMonths(`${m}-01`, 1).slice(0, 7)) out.push(m);
+  return out;
+}
+
+/** Pilihan bulan di rekap bulanan: satu bulan, atau rentang bulan (YYYY-MM). */
+export type MonthSelection = { kind: "month"; month: string } | { kind: "range"; from: string; to: string };
+
+/** Bulan yang dipilih, terbaru di depan. Rentang dibatasi 24 bulan terakhir. */
+export function selectedMonths(sel: MonthSelection): string[] {
+  const list = sel.kind === "month" ? [sel.month] : sel.from <= sel.to ? monthSpan(sel.from, sel.to) : monthSpan(sel.to, sel.from);
+  return list.slice(-24).reverse();
+}
+
+export type EmployeeMonthly = { userId: string; months: Map<string, RecapTotals>; total: RecapTotals };
+
+/** Rekap per pegawai per bulan pengajuan (hanya bulan di `months`). Urut dari yang terbesar. */
+export function monthlyByEmployee(list: Reimbursement[], months: string[]): EmployeeMonthly[] {
+  const inMonths = new Set(months);
+  const out = new Map<string, EmployeeMonthly>();
+  for (const r of list) {
+    const m = claimMonth(r);
+    if (!inMonths.has(m)) continue;
+    const e = out.get(r.userId) ?? { userId: r.userId, months: new Map(), total: emptyTotals() };
+    const t = e.months.get(m) ?? emptyTotals();
+    add(t, r);
+    add(e.total, r);
+    e.months.set(m, t);
+    out.set(r.userId, e);
+  }
+  return [...out.values()].sort((a, b) => reimbursed(b.total) - reimbursed(a.total));
+}
+
+/** Nominal yang diganti (diajukan − ditolak): dalam review + belum dibayar + sudah dibayar. */
+export const reimbursed = (t: RecapTotals) => t.inProcess + t.unpaid + t.paid;
 
 /** Nomor pengajuan berikutnya: RB-YYMM-NNN (urut per bulan). */
 export function nextClaimNumber(existing: string[], today: string): string {

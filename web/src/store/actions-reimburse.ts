@@ -18,7 +18,7 @@ import { newId, nowIso, type DataState } from "./state";
 
 function checkRows(s: DataState, rows: ReimburseRowInput[], today: string) {
   if (rows.length === 0) throw new ActionError("Fill in at least 1 row.");
-  const maxAge = s.settings.reimburse.maxReceiptAgeDays;
+  const maxAge = s.settings.reimburse.maxReceiptAgeMonths;
   if (rows.some((r) => Object.keys(validateReimburseRow(r, today, maxAge)).length > 0)) throw new ActionError("Some rows are incomplete or too old.");
 }
 

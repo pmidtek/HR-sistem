@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DEMO_LOGIN } from "@/lib/api/config";
 import { useApp } from "@/store/app-provider";
 import { AcronymLine, APP_NAME, IdtekLogo, PoweredByCartogram } from "@/components/brand/logos";
 import { GradientBackdrop } from "@/components/login/gradient-backdrop";
@@ -16,7 +17,8 @@ const rise = (delay: number) => ({
 });
 
 export default function LoginPage() {
-  const { user } = useApp();
+  const { user, backend } = useApp();
+  const showDemo = !backend || DEMO_LOGIN;
   const router = useRouter();
   const [modal, setModal] = useState<LoginTab | null>(null);
 
@@ -56,9 +58,9 @@ export default function LoginPage() {
           <button type="button" onClick={() => setModal("login")} className="h-10 rounded-xxs bg-white px-7 text-sm font-medium text-[#1a1614] shadow-[0_10px_30px_-10px_rgba(243,106,29,0.6)] transition-colors hover:bg-white/90">
             Sign in
           </button>
-          <button type="button" onClick={() => setModal("demo")} className="h-10 rounded-xxs bg-white/[0.06] px-7 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] backdrop-blur-md transition-colors hover:bg-white/[0.12]">
+          {showDemo && <button type="button" onClick={() => setModal("demo")} className="h-10 rounded-xxs bg-white/[0.06] px-7 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] backdrop-blur-md transition-colors hover:bg-white/[0.12]">
             Try a demo account
-          </button>
+          </button>}
         </motion.div>
         <motion.p {...rise(0.32)} className="mt-5 text-xs text-white/40">
           Accounts are created by HR. Don&apos;t have one? Contact HR.
@@ -69,7 +71,7 @@ export default function LoginPage() {
         <PoweredByCartogram tone="light" />
       </footer>
 
-      {modal && <LoginModal tab={modal} onTabChange={setModal} onClose={() => setModal(null)} />}
+      {modal && <LoginModal tab={showDemo ? modal : "login"} onTabChange={setModal} onClose={() => setModal(null)} showDemo={showDemo} />}
     </div>
   );
 }

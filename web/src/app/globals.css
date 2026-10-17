@@ -78,6 +78,11 @@ body {
   box-shadow: var(--focus-ring);
 }
 
+/* Elemen yang punya penanda fokus sendiri (mis. kolom cari di dropdown: bingkainya di pembungkus). */
+[data-no-ring]:focus-visible {
+  box-shadow: none;
+}
+
 /* Efek kaca untuk kartu, panel, sidebar, dialog. */
 @utility glass {
   background-color: var(--surface-raised);

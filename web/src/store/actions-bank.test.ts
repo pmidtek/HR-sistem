@@ -56,7 +56,7 @@ describe("pengajuan external (freelance)", () => {
     expect(() => submitReimburseClaim(expired, rafi.id, "x", [row], TODAY)).toThrow(/access period/);
   });
 
-  it("struk lebih tua dari batas ditolak saat submit", () => {
-    expect(() => submitReimburseClaim(initialState, "u4", "old", [{ ...row, date: "2026-06-01" }], TODAY)).toThrow();
+  it("struk lebih tua dari 6 bulan ditolak saat submit", () => {
+    expect(() => submitReimburseClaim(initialState, "u4", "old", [{ ...row, date: "2026-03-01" }], TODAY)).toThrow();
   });
 });

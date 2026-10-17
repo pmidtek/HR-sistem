@@ -38,7 +38,7 @@ export const defaultSettings: AppSettings = {
     flatRatePerHour: 50_000,
   },
   payroll: { periodMode: "cutoff", cutoffDay: 25, reimburseViaPayroll: true, payslipPasswordProtected: false },
-  reimburse: { usdRate: 16_500, payDays: [3, 5], leadDays: 2, maxReceiptAgeDays: 60, requireVerifiedAccount: true },
+  reimburse: { usdRate: 16_500, usdRateAuto: false, payDays: [3, 5], leadDays: 2, maxReceiptAgeMonths: 6, requireVerifiedAccount: true },
   bpjs: [
     { id: "kes", name: "BPJS Kesehatan", employeeBps: 100, employerBps: 400, wageCap: 12_000_000 },
     { id: "jht", name: "BPJS JHT", employeeBps: 200, employerBps: 370, wageCap: null },

@@ -65,6 +65,13 @@ export function isQuarterHour(hhmm: string): boolean {
   return /^\d{2}:\d{2}$/.test(hhmm) && toMinutes(hhmm) % 15 === 0;
 }
 
+/** Geser N bulan; tanggal di-clamp ke akhir bulan (31 Agu − 6 bulan = 28 Feb). */
+export function addMonths(date: string, months: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m - 1 + months + 1, 0)).getUTCDate();
+  return toDateString(new Date(Date.UTC(y, m - 1 + months, Math.min(d, last))));
+}
+
 /** "2026-12" → "2026-12-31" */
 export function endOfMonth(month: string): string {
   const [y, m] = month.split("-").map(Number);

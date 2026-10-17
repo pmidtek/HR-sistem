@@ -124,11 +124,13 @@ export type ReimbursementStatus =
   | "paid";
 
 /** `limitPerItem` = batas wajar per baris (Rp); di atasnya ditandai untuk ditinjau. null = tanpa batas. */
-export type ReimbursementCategory = { id: string; name: string; limitPerItem?: number | null };
+/** `active` = false → kategori lama yang sudah tidak dipakai (tetap ada untuk nama di klaim lama). */
+export type ReimbursementCategory = { id: string; name: string; limitPerItem?: number | null; active?: boolean };
 
 /** File lampiran (struk, invoice, bukti transfer). `url` dipakai untuk membuka file; null jika tidak tersedia. */
 /** `hash` = sidik jari isi file (SHA-256) untuk mendeteksi struk yang sama dipakai dua kali. */
-export type FileRef = { name: string; url: string | null; hash?: string };
+/** `id` = id file di backend (Directus); kosong untuk data dummy. */
+export type FileRef = { id?: string; name: string; url: string | null; hash?: string };
 
 /** Satu baris di pengajuan reimburse (satu transaksi). */
 export type ReimbursementItem = {

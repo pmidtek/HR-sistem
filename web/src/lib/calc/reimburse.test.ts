@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Reimbursement, ReimbursementItem, ReimbursementStatus } from "../types";
 import {
-  claimDeclined, claimGross, claimTotal, estimatedPayDate, inPeriod, isBlankRow, nextClaimNumber, normalizeProjectCode, parseUsdCents,
+  claimDeclined, claimGross, claimTotal, estimatedPayDate, inPeriod, isBlankRow, monthlyByEmployee, nextClaimNumber, reimbursed, selectedMonths, normalizeProjectCode, parseUsdCents,
   paymentState, recapBy, recapTotals, stageTotals, sumItemsBy, usdToIdr, validateReimburseRow, type ReimburseRowInput,
 } from "./reimburse";
 
@@ -135,5 +135,32 @@ describe("filter periode", () => {
     expect(inPeriod("2026-09-15", { kind: "range", from: "2026-09-01", to: "2026-09-15" })).toBe(true);
     expect(inPeriod("2026-09-16", { kind: "range", from: "2026-09-01", to: "2026-09-15" })).toBe(false);
     expect(inPeriod("2020-01-01", { kind: "all" })).toBe(true);
+  });
+});
+
+describe("rekap bulanan per pegawai", () => {
+  const at = (r: Reimbursement, submittedAt: string, id: string) => ({ ...r, id, submittedAt });
+
+  it("bulan terpilih: satu bulan atau rentang, terbaru di depan", () => {
+    expect(selectedMonths({ kind: "month", month: "2026-10" })).toEqual(["2026-10"]);
+    expect(selectedMonths({ kind: "range", from: "2025-11", to: "2026-01" })).toEqual(["2026-01", "2025-12", "2025-11"]);
+    expect(selectedMonths({ kind: "range", from: "2026-03", to: "2026-01" })).toEqual(["2026-03", "2026-02", "2026-01"]);
+  });
+
+  it("menjumlah per pegawai per bulan, baris ditolak tidak dihitung", () => {
+    const list = [
+      at(claim("budi", "paid", [item(100_000), item(50_000, true)]), "2026-09-03", "a"),
+      at(claim("budi", "approved", [item(200_000)]), "2026-10-02", "b"),
+      at(claim("budi", "rejected", [item(999_000)]), "2026-10-05", "c"),
+      at(claim("maya", "pending_finance", [item(400_000)]), "2026-10-07", "d"),
+      at(claim("maya", "paid", [item(70_000)]), "2026-03-01", "e"),
+    ];
+    const rows = monthlyByEmployee(list, ["2026-09", "2026-10"]);
+    expect(rows.map((r) => r.userId)).toEqual(["maya", "budi"]);
+    const budi = rows[1];
+    expect(budi.months.get("2026-09")).toMatchObject({ count: 1, paid: 100_000, declined: 50_000 });
+    expect(budi.months.get("2026-10")).toMatchObject({ count: 2, unpaid: 200_000, declined: 999_000 });
+    expect(reimbursed(budi.total)).toBe(300_000);
+    expect(reimbursed(rows[0].total)).toBe(400_000); // bulan Maret di luar kolom
   });
 });

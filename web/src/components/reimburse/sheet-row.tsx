@@ -1,12 +1,16 @@
 "use client";
 
-import { Copy, Paperclip, Trash2, X } from "lucide-react";
-import { useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { Copy, Loader2, Paperclip, Trash2, X } from "lucide-react";
+import { useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from "react";
 import type { ReimburseRowInput, RowErrors } from "@/lib/calc/reimburse";
 import { cn } from "@/lib/cn";
+import { isReceiptFile, nameClipboardFiles } from "@/lib/files";
 import { formatNumber } from "@/lib/format";
-import type { ReimbursementCategory } from "@/lib/types";
+import type { FileRef, ReimbursementCategory } from "@/lib/types";
+import { CellCombobox } from "../ui/cell-combobox";
+import type { ComboOption } from "../ui/combobox";
 import { Icon } from "../ui/icon";
+import { AttachDialog } from "./attach-dialog";
 import { FileViewer } from "./file-viewer";
 
 /** Baris lembar input: data + teks mentah untuk kolom USD/kode supaya mengetik terasa natural. */
@@ -23,20 +27,47 @@ type Props = {
   today: string;
   /** Tanggal paling lama yang boleh (batas umur struk). */
   minDate: string;
-  codeListId: string;
+  /** Pilihan kode project (bisa dicari; kode lain boleh diketik). */
+  codeOptions: ComboOption[];
   onChange: (patch: Partial<SheetRow>) => void;
   onUsd: (text: string) => void;
   onEnter: (e: KeyboardEvent<HTMLElement>) => void;
   onPaste: (e: ClipboardEvent<HTMLInputElement>) => void;
   onDuplicate: () => void;
   onRemove: () => void;
+  /** File dipilih → diupload (mode backend) lalu ditambahkan ke baris. */
+  onAddFiles: (files: File[]) => void;
+  /** File yang sudah tersimpan (dari pop-up lampiran) ditambahkan ke baris. */
+  onAddRefs: (files: FileRef[]) => void;
+  /** Sedang mengupload file untuk baris ini. */
+  uploading: boolean;
+  /** Keterangan kurs baris ini (tooltip kolom IDR). */
+  rateHint?: string;
 };
 
-export function SheetRowCells({ row: r, index: i, errors: e, categories, today, minDate, codeListId, onChange, onUsd, onEnter, onPaste, onDuplicate, onRemove }: Props) {
+export function SheetRowCells({ row: r, index: i, errors: e, categories, today, minDate, codeOptions, onChange, onUsd, onEnter, onPaste, onDuplicate, onRemove, onAddFiles, onAddRefs, uploading, rateHint }: Props) {
   const n = i + 1;
   const [viewAt, setViewAt] = useState<number | null>(null);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  // Paste gambar (screenshot) di mana pun pada baris ini → jadi lampiran baris ini.
+  const pasteFiles = (ev: ClipboardEvent<HTMLElement>) => {
+    const files = Array.from(ev.clipboardData.files).filter(isReceiptFile);
+    if (files.length === 0) return;
+    ev.preventDefault();
+    onAddFiles(nameClipboardFiles(files));
+  };
+  const dropFiles = (ev: DragEvent<HTMLElement>) => {
+    ev.preventDefault();
+    setDragging(false);
+    const files = Array.from(ev.dataTransfer.files).filter(isReceiptFile);
+    if (files.length > 0) onAddFiles(files);
+  };
   return (
-    <tr className="align-top">
+    <tr className={cn("align-top", dragging && "bg-brand-subtle/40")} onPaste={pasteFiles}
+      onDragOver={(ev) => { if (ev.dataTransfer.types.includes("Files")) { ev.preventDefault(); setDragging(true); } }}
+      onDragLeave={(ev) => { if (!ev.currentTarget.contains(ev.relatedTarget as Node | null)) setDragging(false); }}
+      onDrop={dropFiles}>
       <td className="bg-sunken px-2 py-2.5 text-center font-mono text-xs text-fg-subtle">{n}</td>
       <td className={cn("p-0", e.date && bad)} title={e.date}>
         <input type="date" min={minDate} max={today} value={r.date} onChange={(ev) => onChange({ date: ev.target.value })} onKeyDown={onEnter} className={cell} aria-label={`Date row ${n}`} />
@@ -45,13 +76,27 @@ export function SheetRowCells({ row: r, index: i, errors: e, categories, today, 
         <input value={r.description} placeholder="e.g. Whoosh train ticket" onChange={(ev) => onChange({ description: ev.target.value })} onKeyDown={onEnter} onPaste={onPaste} className={cell} aria-label={`Description row ${n}`} />
       </td>
       <td className={cn("p-0", e.categoryId && bad)} title={e.categoryId}>
-        <select value={r.categoryId} onChange={(ev) => onChange({ categoryId: ev.target.value })} className={cn(cell, !r.categoryId && "text-fg-subtle")} aria-label={`Category row ${n}`}>
-          <option value="">Select…</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <CellCombobox
+          aria-label={`Category row ${n}`}
+          value={r.categoryId}
+          onChange={(v) => onChange({ categoryId: v })}
+          options={categories.filter((c) => c.active !== false || c.id === r.categoryId).map((c) => ({ value: c.id, label: c.name }))}
+          searchPlaceholder="Search category…"
+        />
       </td>
       <td className="p-0">
-        <input value={r.codeText} list={codeListId} placeholder="Optional" onChange={(ev) => onChange({ codeText: ev.target.value.toUpperCase() })} onKeyDown={onEnter} className={cn(cell, "font-mono uppercase placeholder:font-sans placeholder:normal-case")} aria-label={`Code row ${n}`} />
+        <CellCombobox
+          aria-label={`Code row ${n}`}
+          value={r.codeText}
+          onChange={(v) => onChange({ codeText: v })}
+          options={codeOptions}
+          placeholder="Optional"
+          searchPlaceholder="Search or type a code…"
+          creatable
+          clearable
+          normalize={(s) => s.trim().toUpperCase().replace(/\s+/g, "")}
+          className="font-mono"
+        />
       </td>
       <td className={cn("p-0", e.amountUsdCents && bad)} title={e.amountUsdCents}>
         <div className="relative">
@@ -59,7 +104,7 @@ export function SheetRowCells({ row: r, index: i, errors: e, categories, today, 
           <input inputMode="decimal" value={r.usdText} placeholder="-" onChange={(ev) => onUsd(ev.target.value)} onKeyDown={onEnter} className={cn(cell, "pl-6 text-right font-mono")} aria-label={`Cost USD row ${n}`} />
         </div>
       </td>
-      <td className={cn("p-0", e.amount && bad)} title={e.amount}>
+      <td className={cn("p-0", e.amount && bad)} title={e.amount ?? (r.idrAuto ? rateHint : undefined)}>
         <div className="relative">
           {r.idrAuto && r.amountUsdCents !== null && <span className="pointer-events-none absolute top-1 left-2 text-[9px] text-fg-subtle uppercase">rate</span>}
           <input
@@ -73,8 +118,9 @@ export function SheetRowCells({ row: r, index: i, errors: e, categories, today, 
           />
         </div>
       </td>
-      <td className={cn("px-2 py-1.5", e.files && bad)} title={e.files}>
-        <div className="flex flex-wrap items-center gap-1">
+      <td className={cn("px-2 py-1.5", e.files && bad)} title={e.files ?? "Upload, drag & drop, or click here and paste a screenshot (Cmd+V)"}>
+        {/* tabIndex: klik sel ini lalu Cmd+V untuk menempel screenshot. */}
+        <div tabIndex={0} aria-label={`Receipts row ${n}`} className="flex flex-wrap items-center gap-1 rounded-xxs outline-none focus:shadow-[inset_0_0_0_2px_var(--brand)]">
           {r.files.map((f, j) => (
             <span key={`${f.name}-${j}`} className="inline-flex max-w-full items-center gap-1 rounded-xxs bg-sunken px-1.5 py-0.5 text-[11px] text-fg-muted">
               <button type="button" className="max-w-24 truncate hover:text-fg-brand hover:underline" title={`Open ${f.name}`} onClick={() => setViewAt(j)}>{f.name}</button>
@@ -83,21 +129,26 @@ export function SheetRowCells({ row: r, index: i, errors: e, categories, today, 
               </button>
             </span>
           ))}
-          <label className="inline-flex cursor-pointer items-center gap-1 rounded-xxs px-1.5 py-1 text-[11px] text-fg-brand hover:bg-hover">
-            <Icon icon={Paperclip} size={12} /> {r.files.length === 0 ? "Upload" : "Add"}
-            <input
-              type="file"
-              multiple
-              accept="image/*,application/pdf"
-              className="sr-only"
-              onChange={(ev) => {
-                onChange({ files: [...r.files, ...Array.from(ev.target.files ?? []).map((x) => ({ name: x.name, url: URL.createObjectURL(x) }))] });
-                ev.target.value = "";
-              }}
-            />
-          </label>
+          {uploading ? (
+            <span className="inline-flex items-center gap-1 px-1.5 py-1 text-[11px] text-fg-muted"><Icon icon={Loader2} size={12} className="animate-spin" /> Uploading…</span>
+          ) : (
+            <button type="button" onClick={() => setAttachOpen(true)} className="inline-flex items-center gap-1 rounded-xxs px-1.5 py-1 text-[11px] text-fg-brand hover:bg-hover">
+              <Icon icon={Paperclip} size={12} /> {r.files.length === 0 ? "Attach" : "Add"}
+            </button>
+          )}
         </div>
         {viewAt !== null && r.files[viewAt] && <FileViewer files={r.files} start={viewAt} onClose={() => setViewAt(null)} />}
+        {attachOpen && (
+          <AttachDialog
+            kind="receipt"
+            title={`Receipts · row ${n}`}
+            description={r.description ? r.description : "Attach the receipt, invoice, or card statement for this expense."}
+            files={r.files}
+            onAdd={onAddRefs}
+            onRemove={(k) => onChange({ files: r.files.filter((_, j) => j !== k) })}
+            onClose={() => setAttachOpen(false)}
+          />
+        )}
       </td>
       <td className="px-1 py-1.5">
         <div className="flex">

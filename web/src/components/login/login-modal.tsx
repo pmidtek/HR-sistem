@@ -5,9 +5,12 @@ import { ArrowRight, Eye, EyeOff, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, type FormEvent } from "react";
 import { roleLabel } from "@/lib/access";
+import { DEMO_PASSWORD } from "@/lib/api/config";
 import { todayJakarta } from "@/lib/calc/dates";
 import { cn } from "@/lib/cn";
+import { users as demoUsers } from "@/lib/mock/people";
 import { useApp } from "@/store/app-provider";
+import { MICROSOFT_LOGIN_URL } from "@/store/backend-session";
 
 export type LoginTab = "login" | "demo";
 
@@ -26,27 +29,42 @@ function MicrosoftLogo() {
 const field = "h-10 w-full rounded-xxs bg-white/[0.04] px-3 text-sm text-white outline-none shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-white/30 focus:shadow-[inset_0_0_0_1px_var(--brand)]";
 const label = "mb-1.5 block text-xs text-white/80";
 
-export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTabChange: (t: LoginTab) => void; onClose: () => void }) {
-  const { state, login } = useApp();
+export function LoginModal({ tab, onTabChange, onClose, showDemo }: { tab: LoginTab; onTabChange: (t: LoginTab) => void; onClose: () => void; showDemo: boolean }) {
+  const { state, login, signIn, signInMicrosoft, ssoEnabled, backend } = useApp();
+  const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [remember, setRemember] = useState(true);
-  const demo = ["u1", "u2", "u3", "u4", "u5", "u6", "u11"].map((id) => state.users.find((u) => u.id === id)).filter((u) => u !== undefined);
+  // Mode backend: akun demo hasil seed (password sama untuk semua). Mode dummy: data di memori.
+  const source = backend ? demoUsers : state.users;
+  const demo = ["u1", "u2", "u3", "u4", "u5", "u6", "u11"].map((id) => source.find((u) => u.id === id)).filter((u) => u !== undefined);
+  const teamName = (id: string) => (backend ? "" : state.teams.find((t) => t.id === id)?.name ?? "");
   // Akun nonaktif atau external yang masa aksesnya habis tidak bisa masuk.
   const blockedReason = (u: (typeof demo)[number]) =>
     !u.active ? "This account is inactive. Contact HR."
     : u.role === "external" && u.external && u.external.accessUntil < todayJakarta() ? "Your access period has ended. Contact your PIC."
     : null;
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const found = state.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!found || password.length === 0) return setError("Wrong email or password.");
-    const blocked = blockedReason(found);
-    if (blocked) return setError(blocked);
-    login(found.id, remember);
+    if (!email.trim() || !password) return setError("Enter your email and password.");
+    setBusy(true);
+    const err = await signIn(email, password, remember);
+    setBusy(false);
+    if (err) setError(err);
+  }
+
+  async function demoLogin(u: (typeof demo)[number]) {
+    if (!backend) {
+      const blocked = blockedReason(u);
+      return blocked ? setError(blocked) : login(u.id);
+    }
+    setBusy(true);
+    const err = await signIn(u.email, DEMO_PASSWORD, true);
+    setBusy(false);
+    if (err) setError(err);
   }
 
   return (
@@ -71,7 +89,7 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
             </p>
 
             <div role="tablist" className="mt-5 inline-flex rounded-xs bg-white/[0.05] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
-              {(["login", "demo"] as const).map((t) => (
+              {(showDemo ? (["login", "demo"] as const) : (["login"] as const)).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -87,10 +105,21 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
 
             {tab === "login" ? (
               <div className="mt-6 flex flex-col gap-5">
-                <button type="button" disabled className="flex h-10 items-center justify-center gap-2.5 rounded-xxs text-xs text-white/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]">
-                  <MicrosoftLogo /> Continue with Microsoft
-                  <span className="rounded-xxs bg-white/10 px-1.5 py-0.5 text-[10px] text-white/50">soon</span>
-                </button>
+                {ssoEnabled ? (
+                  // Tautan biasa (navigasi penuh): /panel/* adalah backend Directus, bukan halaman Next.
+                  <a
+                    href={MICROSOFT_LOGIN_URL}
+                    onClick={() => signInMicrosoft(remember)}
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-xxs text-xs text-white/80 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/[0.05]"
+                  >
+                    <MicrosoftLogo /> Continue with Microsoft
+                  </a>
+                ) : (
+                  <button type="button" disabled className="flex h-10 items-center justify-center gap-2.5 rounded-xxs text-xs text-white/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]">
+                    <MicrosoftLogo /> Continue with Microsoft
+                    <span className="rounded-xxs bg-white/10 px-1.5 py-0.5 text-[10px] text-white/50">soon</span>
+                  </button>
+                )}
                 <div className="flex items-center gap-3 text-[10px] text-white/40">
                   <span className="h-px flex-1 bg-white/10" /> OR <span className="h-px flex-1 bg-white/10" />
                 </div>
@@ -113,21 +142,22 @@ export function LoginModal({ tab, onTabChange, onClose }: { tab: LoginTab; onTab
                     <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-3.5 accent-[var(--brand)]" />
                     Remember me
                   </label>
-                  <button type="submit" className="flex h-10 items-center justify-center gap-2 rounded-xxs bg-white text-sm font-medium text-[#1a1614] transition-colors hover:bg-white/90">
-                    Sign in <ArrowRight size={15} strokeWidth={1.5} />
+                  <button type="submit" disabled={busy} className="flex h-10 items-center justify-center gap-2 rounded-xxs bg-white text-sm font-medium text-[#1a1614] transition-colors hover:bg-white/90 disabled:opacity-60">
+                    {busy ? "Signing in…" : <>Sign in <ArrowRight size={15} strokeWidth={1.5} /></>}
                   </button>
                 </form>
               </div>
             ) : (
               <ul className="mt-6 flex flex-col gap-1.5">
+                {error && <li className="text-xs text-[#ff8a6b]">{error}</li>}
                 {demo.map((u) => (
                   <li key={u.id}>
-                    <button type="button" onClick={() => login(u.id)} className="flex w-full items-center gap-3 rounded-xxs px-3 py-2.5 text-left shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-colors hover:bg-white/[0.05]">
+                    <button type="button" disabled={busy} onClick={() => void demoLogin(u)} className="flex w-full items-center gap-3 rounded-xxs px-3 py-2.5 text-left shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-colors hover:bg-white/[0.05]">
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[11px] text-white/70">{u.name.split(" ").slice(0, 2).map((p) => p[0]).join("")}</span>
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-sm">{u.name}</span>
                         <span className="truncate text-[11px] text-white/45">
-                          {roleLabel[u.role]}{u.role === "employee" && ` · ${state.teams.find((t) => t.id === u.teamId)?.name ?? ""}`}{u.role === "external" && ` · ${u.position}`}
+                          {roleLabel[u.role]}{u.role === "employee" && teamName(u.teamId) && ` · ${teamName(u.teamId)}`}{u.role !== "stakeholder" && u.role !== "hr" && u.role !== "finance" && ` · ${u.position}`}
                         </span>
                       </span>
                       <ArrowRight size={14} strokeWidth={1.5} className="text-white/30" />

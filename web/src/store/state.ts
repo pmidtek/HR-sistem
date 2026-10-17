@@ -152,6 +152,18 @@ export const initialState: DataState = {
   settings: defaultSettings,
 };
 
+/**
+ * State awal mode backend: semua kosong, diisi dari API setelah login.
+ * Modul yang belum dirilis (timesheet, cuti, payroll, project) tetap kosong sampai endpoint-nya dibuat.
+ */
+export const emptyState: DataState = {
+  users: [], teams: [], holidays: [], activityCodes: [], timesheet: [], leaveTypes: [], leaveBalances: [], leaveRequests: [],
+  overtimeRequests: [], reimbursementCategories: [], reimbursements: [], payrollRuns: [], payslips: [], companies: [],
+  opportunities: [], projects: [], boards: [], boardColumns: [], tasks: [], epics: [], stories: [], sprints: [], milestones: [],
+  deliverables: [], moms: [], notes: [], decisions: [], projectLinks: [], touchpoints: [], keyActions: [], changeRequests: [],
+  baselines: [], activityLogs: [], joinRequests: [], inviteLinks: [], notifications: [], settings: defaultSettings,
+};
+
 let seq = 1000;
 export function newId(prefix: string): string {
   seq += 1;

@@ -16,7 +16,8 @@ export type Decision = {
   noteRequired: boolean;
   /** Untuk lembur: jam yang diajukan (menit) agar reviewer bisa mengubahnya. */
   requestedMinutes?: number;
-  onConfirm: (note: string, approvedMinutes?: number) => boolean;
+  /** Boleh async (mode backend menunggu jawaban server). */
+  onConfirm: (note: string, approvedMinutes?: number) => boolean | Promise<boolean>;
 };
 
 export function DecisionDialog({ decision, onClose }: { decision: Decision; onClose: () => void }) {
@@ -24,6 +25,7 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
   const [hours, setHours] = useState(decision.requestedMinutes !== undefined ? String(decision.requestedMinutes / 60) : "");
   const [error, setError] = useState<string | undefined>();
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!done) return;
@@ -31,14 +33,17 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
     return () => window.clearTimeout(t);
   }, [done, onClose]);
 
-  function confirm() {
+  async function confirm() {
     const minutes = decision.requestedMinutes !== undefined ? Math.round(Number(hours.replace(",", ".")) * 4) * 15 : undefined;
     if (minutes !== undefined && (Number.isNaN(minutes) || minutes <= 0)) return setError("Invalid hours.");
     const changed = minutes !== undefined && minutes !== decision.requestedMinutes;
     if ((decision.noteRequired || changed) && !note.trim()) {
       return setError(changed ? "Changing the hours requires a note." : "A note is required.");
     }
-    if (!decision.onConfirm(note.trim(), changed ? minutes : undefined)) return;
+    setBusy(true);
+    const ok = await decision.onConfirm(note.trim(), changed ? minutes : undefined);
+    setBusy(false);
+    if (!ok) return;
     // Keputusan positif (setujui/teruskan/bayar): tampilkan centang dulu, lalu tutup.
     if (decision.tone === "brand") setDone(true);
     else onClose();
@@ -53,7 +58,7 @@ export function DecisionDialog({ decision, onClose }: { decision: Decision; onCl
         !done && (
           <>
             <Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button>
-            <Button tone={decision.tone} onClick={confirm}>{decision.confirmLabel}</Button>
+            <Button tone={decision.tone} onClick={confirm} disabled={busy}>{busy ? "Saving…" : decision.confirmLabel}</Button>
           </>
         )
       }

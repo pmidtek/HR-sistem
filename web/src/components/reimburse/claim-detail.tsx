@@ -9,7 +9,8 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatDayShort, formatRupiah } from "@/lib/format";
 import type { Reimbursement } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { actOnReimburse, reimburseActionsFor, setReimburseItemDecline, sponsorOf } from "@/store/actions-reimburse";
+import { reimburseActionsFor, sponsorOf } from "@/store/actions-reimburse";
+import { useOps } from "@/store/ops";
 import { ApprovalTimeline } from "../approval-timeline";
 import { DecisionDialog, type Decision } from "../approvals/decision-dialog";
 import { useLookups } from "../hooks";
@@ -52,7 +53,8 @@ function reached(r: Reimbursement, steps: ReturnType<typeof stepsFor>): number {
 
 /** Detail satu pengajuan: rincian baris, alasan tolak, bukti bayar, riwayat, dan aksi sesuai peran. */
 export function ClaimDetail({ claim: r, onClose, onRevise, onPay }: Props) {
-  const { state, actor, today, run } = useAuthed();
+  const { state, actor, today } = useAuthed();
+  const ops = useOps();
   const { userName } = useLookups();
   const payDate = usePayDate();
   const [decision, setDecision] = useState<Decision | null>(null);
@@ -70,7 +72,7 @@ export function ClaimDetail({ claim: r, onClose, onRevise, onPay }: Props) {
   const ask = (d: Omit<Decision, "noteRequired" | "tone"> & Partial<Pick<Decision, "noteRequired" | "tone">>) => setDecision({ tone: "brand", noteRequired: false, ...d });
 
   const decide = (action: "confirm" | "forward" | "approve" | "revision" | "reject", label: string, tone: "brand" | "danger") =>
-    ask({ title: `${label}: ${r.number}`, confirmLabel: label, tone, noteRequired: tone === "danger", onConfirm: (note) => run((s) => actOnReimburse(s, r.id, action, actor, note || undefined), "Decision saved.") });
+    ask({ title: `${label}: ${r.number}`, confirmLabel: label, tone, noteRequired: tone === "danger", onConfirm: (note) => ops.actOnClaim(r.id, action, note || undefined, "Decision saved.") });
 
   return (
     <>
@@ -164,8 +166,8 @@ export function ClaimDetail({ claim: r, onClose, onRevise, onPay }: Props) {
 
           <ClaimItems
             items={r.items}
-            onDecline={canReview ? (i) => ask({ title: `Decline item: ${i.description}`, confirmLabel: "Decline item", tone: "danger", noteRequired: true, onConfirm: (note) => run((s) => setReimburseItemDecline(s, r.id, i.id, note, actor), "Item declined.") }) : undefined}
-            onRestore={canReview ? (i) => run((s) => setReimburseItemDecline(s, r.id, i.id, null, actor), "Item restored.") : undefined}
+            onDecline={canReview ? (i) => ask({ title: `Decline item: ${i.description}`, confirmLabel: "Decline item", tone: "danger", noteRequired: true, onConfirm: (note) => ops.declineItem(r.id, i.id, note, "Item declined.") }) : undefined}
+            onRestore={canReview ? (i) => void ops.declineItem(r.id, i.id, null, "Item restored.") : undefined}
           />
 
           <dl className="grid grid-cols-3 gap-3 rounded-s bg-sunken p-4 text-sm">

@@ -6,21 +6,22 @@ import { estimatedPayDate } from "@/lib/calc/reimburse";
 import { formatDayShort, formatNumber } from "@/lib/format";
 import type { AppSettings } from "@/lib/settings-types";
 import { useAuthed } from "@/store/app-provider";
-import { saveSettings } from "@/store/actions-business";
+import { useOps } from "@/store/ops";
 import { Input, Select, Switch, Textarea } from "../ui/form";
 import { parseRp, SettingsSection } from "./settings-section";
 
 type FormProps = { readOnly: boolean };
 
 function useSettingDraft<K extends keyof AppSettings>(key: K) {
-  const { state, run } = useAuthed();
+  const { state } = useAuthed();
+  const ops = useOps();
   const [draft, setDraft] = useState<AppSettings[K]>(state.settings[key]);
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.settings[key]);
   return {
     draft,
     setDraft,
     dirty,
-    save: () => run((s) => saveSettings(s, key, draft), "Settings saved."),
+    save: () => void ops.saveSettings(key, draft, "Settings saved."),
     reset: () => setDraft(state.settings[key]),
   };
 }
@@ -115,14 +116,14 @@ export function ReimburseForm({ readOnly }: FormProps) {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input label="Max receipt age (days)" type="number" min={1} max={365} value={d.maxReceiptAgeDays} onChange={(e) => setDraft({ ...d, maxReceiptAgeDays: num(e.target.value) })} helperText="Older receipts can't be submitted, so old receipts aren't recycled." />
+        <Input label="Max receipt age (months)" type="number" min={1} max={24} value={d.maxReceiptAgeMonths} onChange={(e) => setDraft({ ...d, maxReceiptAgeMonths: num(e.target.value) })} helperText="Older receipts can't be submitted, so old receipts aren't recycled." />
         <div className="flex items-end pb-2">
           <Switch checked={d.requireVerifiedAccount} onChange={(v) => setDraft({ ...d, requireVerifiedAccount: v })} label="Only transfer to bank accounts verified by Finance" />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Input label="Minimum days from submission to payment" type="number" min={0} max={14} value={d.leadDays} onChange={(e) => setDraft({ ...d, leadDays: num(e.target.value) })} />
-        <Input label="USD exchange rate (Rp per $1)" inputMode="numeric" value={formatNumber(d.usdRate)} onChange={(e) => setDraft({ ...d, usdRate: parseRp(e.target.value) })} helperText="Pre-fills the IDR column. Employees can still change it to match their card statement." />
+        <UsdRateField value={d} onChange={(patch) => setDraft({ ...d, ...patch })} readOnly={readOnly} />
       </div>
       <div className="rounded-xs bg-sunken px-4 py-3 text-xs text-fg-muted">
         <p className="mb-1.5 text-fg">Preview</p>
@@ -134,5 +135,40 @@ export function ReimburseForm({ readOnly }: FormProps) {
         </ul>
       </div>
     </SettingsSection>
+  );
+}
+
+/** Kurs USD: otomatis tiap hari dari server (kurs referensi ECB) atau diisi manual oleh Finance. */
+function UsdRateField({ value: d, onChange, readOnly }: { value: AppSettings["reimburse"]; onChange: (p: Partial<AppSettings["reimburse"]>) => void; readOnly: boolean }) {
+  const { backend } = useAuthed();
+  const ops = useOps();
+  const [busy, setBusy] = useState(false);
+  const updated = d.usdRateUpdatedAt
+    ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Jakarta", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(d.usdRateUpdatedAt))
+    : null;
+  return (
+    <div className="flex flex-col gap-2">
+      <Input
+        label="USD exchange rate (Rp per $1)"
+        inputMode="numeric"
+        disabled={d.usdRateAuto}
+        value={formatNumber(d.usdRate)}
+        onChange={(e) => onChange({ usdRate: parseRp(e.target.value) })}
+        helperText={d.usdRateAuto
+          ? `Updated automatically every day${updated ? ` · last ${updated} WIB` : ""}${d.usdRateSource ? ` · ${d.usdRateSource}` : ""}.`
+          : "Pre-fills the IDR column. Employees can still change it to match their card statement."}
+      />
+      {backend && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Switch checked={d.usdRateAuto} onChange={(v) => onChange({ usdRateAuto: v })} label="Update automatically (daily reference rate)" />
+          {d.usdRateAuto && !readOnly && (
+            <button type="button" disabled={busy} className="text-xs text-fg-brand hover:underline disabled:opacity-50"
+              onClick={async () => { setBusy(true); await ops.refreshFx(); setBusy(false); }}>
+              {busy ? "Updating…" : "Refresh now"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

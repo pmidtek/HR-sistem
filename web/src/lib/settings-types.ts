@@ -53,12 +53,17 @@ export type TerRate = {
 export type ReimburseSettings = {
   /** Kurs USD → Rupiah untuk mengisi otomatis kolom IDR di form reimburse. */
   usdRate: number;
+  /** true = kurs diperbarui otomatis tiap hari oleh server (kurs referensi ECB). */
+  usdRateAuto: boolean;
+  /** Kapan & dari mana kurs terakhir diambil (hanya mode backend). */
+  usdRateUpdatedAt?: string | null;
+  usdRateSource?: string | null;
   /** Hari bayar reimburse (0 = Minggu … 6 = Sabtu), mis. Rabu & Jumat = [3, 5]. */
   payDays: number[];
   /** Jarak minimal (hari) dari pengajuan ke hari bayar. Senin + 2 = Rabu, Rabu + 2 = Jumat. */
   leadDays: number;
-  /** Struk lebih tua dari ini (hari) tidak bisa diajukan. */
-  maxReceiptAgeDays: number;
+  /** Struk lebih tua dari ini (bulan) tidak bisa diajukan. */
+  maxReceiptAgeMonths: number;
   /** Bayar via transfer hanya ke rekening yang sudah diverifikasi Finance. */
   requireVerifiedAccount: boolean;
 };

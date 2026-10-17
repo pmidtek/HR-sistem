@@ -2,7 +2,7 @@
 
 import { Download, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
-import { claimTotal, inPeriod, recapBy, stageOf, type PeriodFilter, type Stage } from "@/lib/calc/reimburse";
+import { claimTotal, inPeriod, monthlyByEmployee, recapBy, selectedMonths, stageOf, type MonthSelection, type PeriodFilter, type Stage } from "@/lib/calc/reimburse";
 import { cn } from "@/lib/cn";
 import { formatRupiah } from "@/lib/format";
 import { useAuthed } from "@/store/app-provider";
@@ -10,7 +10,10 @@ import { reimburseActionsFor } from "@/store/actions-reimburse";
 import { useLookups } from "@/components/hooks";
 import { ClaimDetail } from "@/components/reimburse/claim-detail";
 import { ClaimTable } from "@/components/reimburse/claim-table";
-import { exportReimburseCsv } from "@/components/reimburse/export";
+import { EmployeeRecapSheet } from "@/components/reimburse/employee-recap-sheet";
+import { exportMonthlyRecapCsv, exportReimburseCsv } from "@/components/reimburse/export";
+import { MonthDetailSheet } from "@/components/reimburse/month-detail-sheet";
+import { MonthCards, MonthSelectControl, monthsLabel } from "@/components/reimburse/monthly-recap";
 import { stageMeta } from "@/components/reimburse/parts";
 import { PayDialog } from "@/components/reimburse/pay-dialog";
 import { defaultPeriod, PeriodFilterControl, periodLabel } from "@/components/reimburse/period-filter";
@@ -38,6 +41,9 @@ export default function ReimburseRecapPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [paying, setPaying] = useState<string[] | null>(null);
+  const [monthSel, setMonthSel] = useState<MonthSelection>(() => ({ kind: "month", month: today.slice(0, 7) }));
+  // Rincian bulan → (opsional) rincian satu orang di bulan itu.
+  const [view, setView] = useState<{ month: string; userId: string | null } | null>(null);
 
   // Grafik bulanan memakai semua filter kecuali periode, supaya tren tetap terlihat.
   const base = useMemo(
@@ -50,6 +56,9 @@ export default function ReimburseRecapPage() {
   const selected = [...picked].filter((id) => payable.has(id));
   const selectedTotal = state.reimbursements.filter((r) => selected.includes(r.id)).reduce((s, r) => s + claimTotal(r), 0);
   const overdue = base.filter((r) => r.status === "approved" && payDate(r.submittedAt) < today);
+  const months = selectedMonths(monthSel);
+  const monthly = monthlyByEmployee(base, months);
+  const teamOf = (id: string) => teamName(state.users.find((u) => u.id === id)?.teamId ?? "");
   const byUser = [...recapBy(inRange, (r) => r.userId).entries()].sort((a, b) => b[1].total - a[1].total);
   const open = openId ? state.reimbursements.find((r) => r.id === openId) : undefined;
   const userOptions = [{ value: "", label: "All employees" }, ...state.users.map((u) => ({ value: u.id, label: u.name, hint: teamName(u.teamId) }))];
@@ -77,6 +86,23 @@ export default function ReimburseRecapPage() {
         <StatusFlow list={inRange} selected={stage} onSelect={setStage} title="Total submitted" />
       </CollapsibleSection>
 
+      <CollapsibleSection
+        id="recap-monthly"
+        title="Monthly recap"
+        summary={monthsLabel(months)}
+        actions={
+          <Button size="small" variant="secondary" tone="neutral" iconLeft={<Icon icon={Download} size={14} />} disabled={monthly.length === 0}
+            onClick={() => exportMonthlyRecapCsv(base, months, state.reimbursementCategories, userName, teamOf, `reimbursement-monthly-${today}.csv`)}>
+            Export to Excel
+          </Button>
+        }
+        className="mb-8"
+      >
+        <div className="mb-4"><MonthSelectControl value={monthSel} onChange={setMonthSel} today={today} /></div>
+        <MonthCards rows={monthly} months={months} onOpen={(month) => setView({ month, userId: null })} />
+        <p className="mt-2 text-xs text-fg-subtle">Total reimbursed by submission month (declined rows not counted). Click a month for details.</p>
+      </CollapsibleSection>
+
       <CollapsibleSection id="recap-charts" title="Trends & breakdown" summary="by month, category, project code" defaultOpen={false} className="mb-8">
         <RecapCharts list={base} periodList={inRange} today={today} categoryName={categoryName} />
       </CollapsibleSection>
@@ -95,7 +121,7 @@ export default function ReimburseRecapPage() {
               <Tr key={id} className={cn("cursor-pointer", userId === id && "bg-hover")} onClick={() => setUserId(userId === id ? "" : id)}>
                 <Td>
                   <p className="text-sm">{userName(id)}</p>
-                  <p className="text-xs text-fg-subtle">{teamName(state.users.find((x) => x.id === id)?.teamId ?? "")}</p>
+                  <p className="text-xs text-fg-subtle">{teamOf(id)}</p>
                 </Td>
                 <Td className="text-right font-mono text-xs">{u.count}</Td>
                 <Td className="text-right font-mono text-xs">{formatRupiah(u.total)}</Td>
@@ -129,6 +155,13 @@ export default function ReimburseRecapPage() {
         <ClaimTable list={list} onOpen={setOpenId} showOwner selection={payable.size > 0 ? { selectable: payable, picked, onChange: setPicked } : undefined} empty="No claims" />
       </CollapsibleSection>
 
+      {view && !view.userId && <MonthDetailSheet month={view.month} rows={monthly} onOpenPerson={(userId) => setView({ ...view, userId })} onClose={() => setView(null)} />}
+      {view?.userId && (
+        <EmployeeRecapSheet
+          userId={view.userId} list={base} months={[view.month]} month={view.month} onMonth={() => undefined}
+          onOpenClaim={setOpenId} onClose={() => setView(null)} onBack={() => setView({ ...view, userId: null })}
+        />
+      )}
       {open && <ClaimDetail claim={open} onClose={() => setOpenId(null)} onPay={(ids) => setPaying(ids)} />}
       {paying && <PayDialog ids={paying} onClose={() => setPaying(null)} onDone={() => setPicked(new Set())} />}
     </>

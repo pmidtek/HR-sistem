@@ -4,3 +4,7 @@
 !.env.example
 node_modules/
 *.sql
+
+# Catatan/ringkasan pribadi (tidak ikut ke GitHub)
+RINGKASAN-*.md
+notes/

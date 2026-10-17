@@ -6,7 +6,7 @@ import { maskAccount } from "@/lib/calc/reimburse-risk";
 import { formatDate } from "@/lib/format";
 import type { User } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { saveBankAccount, verifyBankAccount } from "@/store/actions-bank";
+import { useOps } from "@/store/ops";
 import { useLookups } from "../hooks";
 import { Button } from "../ui/button";
 import { Badge, Card } from "../ui/display";
@@ -66,14 +66,18 @@ export function MyPayoutCard() {
 }
 
 export function BankAccountDialog({ owner, onClose }: { owner: User; onClose: () => void }) {
-  const { actor, run } = useAuthed();
+  const ops = useOps();
   const listId = useId();
+  const [busy, setBusy] = useState(false);
   const [bankName, setBankName] = useState(owner.bankAccount?.bankName ?? "");
   const [accountNumber, setAccountNumber] = useState(owner.bankAccount?.accountNumber ?? "");
   const [accountHolder, setAccountHolder] = useState(owner.bankAccount?.accountHolder ?? owner.name.toUpperCase());
 
-  function save() {
-    if (run((s) => saveBankAccount(s, owner.id, { bankName, accountNumber, accountHolder }, actor), "Bank account saved. Finance will verify it.")) onClose();
+  async function save() {
+    setBusy(true);
+    const ok = await ops.saveBank(owner.id, { bankName, accountNumber, accountHolder }, "Bank account saved. Finance will verify it.");
+    setBusy(false);
+    if (ok) onClose();
   }
 
   return (
@@ -82,7 +86,7 @@ export function BankAccountDialog({ owner, onClose }: { owner: User; onClose: ()
       onOpenChange={(o) => !o && onClose()}
       title={owner.bankAccount ? "Change payout account" : "Add payout account"}
       description="Use an account in your own name. A different holder name is flagged for Finance."
-      footer={<><Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button><Button onClick={save}>Save</Button></>}
+      footer={<><Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button><Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</Button></>}
     >
       <div className="flex flex-col gap-4">
         <datalist id={listId}>{BANKS.map((b) => <option key={b} value={b} />)}</datalist>
@@ -96,7 +100,8 @@ export function BankAccountDialog({ owner, onClose }: { owner: User; onClose: ()
 
 /** Tombol verifikasi untuk Finance (dipakai di detail pengajuan & daftar pegawai). */
 export function useVerifyAccount(ownerId: string): (() => void) | undefined {
-  const { actor, run } = useAuthed();
+  const { actor } = useAuthed();
+  const ops = useOps();
   if (actor.role !== "finance" || actor.id === ownerId) return undefined;
-  return () => run((s) => verifyBankAccount(s, ownerId, actor), "Bank account verified.");
+  return () => void ops.verifyBank(ownerId, "Bank account verified.");
 }

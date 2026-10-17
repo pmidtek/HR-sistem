@@ -8,18 +8,22 @@ import { cn } from "@/lib/cn";
 import { formatRupiah } from "@/lib/format";
 import type { FileRef } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { payReimburseClaims } from "@/store/actions-reimburse";
+import { useOps } from "@/store/ops";
 import { useLookups } from "../hooks";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
 import { Input, Select } from "../ui/form";
 import { Icon } from "../ui/icon";
+import { AttachDialog } from "./attach-dialog";
 import { FileChips } from "./file-viewer";
 import { canSeeFullAccount } from "./payout-account";
 
 /** Finance/HR/Stakeholder membayar satu atau beberapa pengajuan sekaligus, dengan bukti pembayaran. */
 export function PayDialog({ ids, onClose, onDone }: { ids: string[]; onClose: () => void; onDone?: () => void }) {
-  const { state, actor, today, run } = useAuthed();
+  const { state, actor, today } = useAuthed();
+  const ops = useOps();
+  const [busy, setBusy] = useState(false);
+  const [attachOpen, setAttachOpen] = useState(false);
   const { userName } = useLookups();
   const claims = state.reimbursements.filter((r) => ids.includes(r.id));
   const total = claims.reduce((s, r) => s + claimTotal(r), 0);
@@ -33,9 +37,11 @@ export function PayDialog({ ids, onClose, onDone }: { ids: string[]; onClose: ()
     ? claims.filter((r) => !state.users.find((u) => u.id === r.userId)?.bankAccount?.verified)
     : [];
 
-  function pay() {
+  async function pay() {
     if (proofFiles.length === 0) return setError("Upload the payment proof (e.g. transfer receipt) first.");
-    const ok = run((s) => payReimburseClaims(s, ids, { date, method, reference: reference.trim(), proofFiles }, actor), `${claims.length} claim(s) marked as paid.`);
+    setBusy(true);
+    const ok = await ops.payClaims(ids, { date, method, reference: reference.trim(), proofFiles }, `${claims.length} claim(s) marked as paid.`);
+    setBusy(false);
     if (ok) {
       onDone?.();
       onClose();
@@ -51,7 +57,7 @@ export function PayDialog({ ids, onClose, onDone }: { ids: string[]; onClose: ()
       footer={
         <>
           <Button variant="secondary" tone="neutral" onClick={onClose}>Cancel</Button>
-          <Button onClick={pay} disabled={blocked.length > 0}>Mark as paid · {formatRupiah(total)}</Button>
+          <Button onClick={pay} disabled={blocked.length > 0 || busy}>{busy ? "Saving…" : `Mark as paid · ${formatRupiah(total)}`}</Button>
         </>
       }
     >
@@ -79,23 +85,14 @@ export function PayDialog({ ids, onClose, onDone }: { ids: string[]; onClose: ()
         <Input label="Reference no. (optional)" placeholder="e.g. transfer reference" value={reference} onChange={(e) => setReference(e.target.value)} />
         <div className="flex flex-col gap-2">
           <p className="text-xs text-fg-muted">Payment proof <span className="text-fg-danger">*</span></p>
-          <label className="flex h-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-xs border border-dashed border-line-strong text-xs text-fg-muted hover:bg-hover">
-            <Icon icon={Paperclip} />
-            Upload transfer receipt (image or PDF, can be more than 1)
-            <input
-              type="file"
-              multiple
-              accept="image/*,application/pdf"
-              className="sr-only"
-              onChange={(e) => {
-                // Baca nama file dulu; input dikosongkan sesudahnya supaya file yang sama bisa dipilih lagi.
-                const added = Array.from(e.target.files ?? []).map((x) => ({ name: x.name, url: URL.createObjectURL(x) }));
-                setProofFiles((f) => [...f, ...added]);
-                setError(undefined);
-                e.target.value = "";
-              }}
-            />
-          </label>
+          <button
+            type="button"
+            onClick={() => setAttachOpen(true)}
+            className="flex h-14 items-center justify-center gap-2 rounded-xs border border-dashed border-line-strong text-sm text-fg-muted transition-colors hover:bg-hover hover:text-fg"
+          >
+            <Icon icon={Paperclip} size={16} /> {proofFiles.length === 0 ? "Attach transfer receipt" : "Add more"}
+            <span className="text-xs text-fg-subtle">· device, screenshot, or link</span>
+          </button>
           {proofFiles.map((f, i) => (
             <div key={`${f.name}-${i}`} className="flex items-center justify-between rounded-xs bg-sunken px-3 py-1.5 text-xs">
               <FileChips files={[f]} />
@@ -112,6 +109,17 @@ export function PayDialog({ ids, onClose, onDone }: { ids: string[]; onClose: ()
           )}
         </div>
       </div>
+      {attachOpen && (
+        <AttachDialog
+          kind="proof"
+          title="Payment proof"
+          description="Transfer receipt or bank statement screenshot. The employee will see it."
+          files={proofFiles}
+          onAdd={(f) => { setProofFiles((x) => [...x, ...f]); setError(undefined); }}
+          onRemove={(i) => setProofFiles((x) => x.filter((_, j) => j !== i))}
+          onClose={() => setAttachOpen(false)}
+        />
+      )}
     </Dialog>
   );
 }

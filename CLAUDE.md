@@ -4,7 +4,10 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 **Spesifikasi lengkap ada di `BRIEF.md`. Baca dulu sebelum mengerjakan apa pun.**
 
 ## Status
-- **Frontend dikerjakan lebih dulu** (atas permintaan owner, 05 Okt 2026): semua halaman sudah ada di `web/` dengan **data dummy** di memori browser (`web/src/lib/mock/`, `web/src/store/`). Belum ada backend.
+- **Frontend dikerjakan lebih dulu** (atas permintaan owner, 05 Okt 2026): semua halaman sudah ada di `web/` dengan **data dummy** di memori browser (`web/src/lib/mock/`, `web/src/store/`).
+- **Backend dibuat 17 Okt 2026** di `directus/` (panduan: `directus/README.md`). **Directus dikunci di 11.17.4**: v12 gratis dibatasi 25 tabel & tanpa SSO (keputusan owner). Skema = kode di `directus/schema/*.ts` (diterapkan `pnpm --dir directus schema:apply`, hanya menambah). Role dengan ID tetap di `directus/access/roles.ts`. Endpoint reimburse/rekening/notifikasi/sinkron Microsoft di `directus/extensions/sidesah` (memakai ulang `web/src/lib/calc`). Modul lain: tabel & permission baca siap, endpoint tulis menyusul saat modul dirilis.
+- **Frontend tersambung ke backend (17 Okt 2026)** untuk modul yang dirilis (Reimburse, Dashboard, Approvals, Employees, Settings). Lapisan API di `web/src/lib/api/` (client, mappers ber-test, load, mutations, realtime WebSocket). Semua aksi komponen lewat `useOps()` (`web/src/store/ops.ts`) yang memilih API (mode backend) atau fungsi murni store (mode `NEXT_PUBLIC_DATA_SOURCE=mock`). Sesi & realtime di `web/src/store/backend-session.ts`. ID role/folder di `web/src/lib/api/ids.ts` wajib sama dengan `directus/access/` (dicek test).
+- Directus dibuka lewat **`/panel`** (permintaan owner): Next.js mem-proxy `/panel/*` ke Directus (`web/next.config.ts`), `PUBLIC_URL` = `<domain>/panel`.
 - Logic murni di `web/src/lib/calc/` (lembur, cuti, timesheet, approval, payroll) sudah ber-unit test. Saat backend dibuat, pindahkan/pakai ulang logic ini di Directus Extensions; `web/src/store/actions*.ts` adalah simulasi custom endpoint yang nanti diganti panggilan API.
 - Login nanti pakai **Microsoft kantor (Entra ID)**. Sekarang login demo (pilih akun).
 - **Modul Sales Pipeline ditunda** (13 Okt 2026). Data company/opportunity tetap ada untuk menu Client project; halaman `/sales` diarahkan ke `/projects`.
@@ -36,9 +39,11 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 ├── docker-compose.yml        # directus + postgres (dev)
 ├── .env.example
 ├── directus/
-│   ├── extensions/           # hooks & endpoints (logic bisnis)
-│   ├── snapshots/            # hasil `directus schema snapshot` (YAML)
-│   └── seed/                 # script seed data dummy & master data
+│   ├── schema/               # definisi tabel sebagai kode (sumber kebenaran)
+│   ├── access/               # role (ID tetap) & permission
+│   ├── scripts/              # bootstrap, schema:apply, access:apply, seed
+│   ├── extensions/sidesah/   # hooks & endpoints (logic bisnis)
+│   └── snapshots/            # hasil `directus schema snapshot` (YAML)
 └── web/                      # Next.js app
 ```
 
@@ -46,7 +51,8 @@ Sistem HRIS internal: timesheet, lembur, cuti, reimburse, payroll + slip gaji, s
 - Semua aturan bisnis (validasi, hitung lembur, potong saldo cuti, payroll, transisi status) **dijalankan di server**. Frontend hanya menampilkan dan mengirim input.
 - Status approval hanya berubah lewat **custom endpoint** dan setiap transisi dicatat ke `approval_logs`. Field `status` read-only di permission semua role.
 - Tidak ada yang boleh meng-approve pengajuannya sendiri.
-- Setiap perubahan skema: jalankan `directus schema snapshot` dan commit file YAML-nya.
+- Setiap perubahan skema: ubah `directus/schema/*.ts`, jalankan `pnpm --dir directus schema:apply` lalu `pnpm --dir directus snapshot`, dan commit file YAML-nya.
+- Jangan beri nama script npm `setup` (bentrok dengan perintah bawaan `pnpm setup` yang mengubah ~/.zshrc).
 - Tarif BPJS, tabel PPh 21 TER, jam kerja normal, mode lembur, dan periode payroll **disimpan di database (CMS)**, jangan di-hardcode.
 - Logic perhitungan (lembur, saldo cuti, payroll, PPh 21) wajib punya **unit test** dengan kasus contoh.
 - TypeScript dan lint harus lolos tanpa error. Jangan pakai `any` atau mematikan rule untuk mengakali error.
@@ -72,5 +78,8 @@ pnpm --dir web dev            # jalankan frontend → http://localhost:3000
 pnpm --dir web test           # unit test logic perhitungan
 pnpm --dir web typecheck      # cek TypeScript
 pnpm --dir web lint           # cek lint
-# docker compose up -d        → jalankan Directus + Postgres (setelah backend dibuat)
+docker compose up -d --build  # jalankan Postgres + Directus (+ build extension)
+pnpm --dir directus bootstrap # skema + permission + master data (tambah -- --demo untuk akun demo, lokal saja)
+pnpm --dir directus snapshot  # perbarui directus/snapshots/schema.yaml setelah ubah skema
+pnpm --dir directus/extensions/sidesah typecheck   # cek TypeScript extension
 ```

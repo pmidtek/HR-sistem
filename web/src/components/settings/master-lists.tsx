@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { formatDate, formatNumber } from "@/lib/format";
 import type { ActivityCode, Holiday, LeaveType, ReimbursementCategory, Team } from "@/lib/types";
 import { useAuthed } from "@/store/app-provider";
-import { saveMaster } from "@/store/actions-business";
+import { useOps } from "@/store/ops";
 import { newId, type DataState } from "@/store/state";
 import { Button, IconButton } from "../ui/button";
 import { Input, Select, Switch } from "../ui/form";
@@ -14,6 +14,8 @@ import { Table, Td, Th, Tr } from "../ui/table";
 import { SettingsSection } from "./settings-section";
 
 type Key = "holidays" | "activityCodes" | "leaveTypes" | "reimbursementCategories" | "teams";
+/** Daftar yang sudah tersambung ke backend (modul lain menyusul saat dirilis). */
+type SavableKey = "holidays" | "reimbursementCategories" | "teams";
 
 type ListProps<K extends Key> = {
   storeKey: K;
@@ -27,15 +29,23 @@ type ListProps<K extends Key> = {
 
 function MasterList<K extends Key>({ storeKey, title, description, readOnly, headers, blank, renderRow }: ListProps<K>) {
   const { state, run } = useAuthed();
+  const ops = useOps();
   type Item = DataState[K][number];
-  const [rows, setRows] = useState<Item[]>(state[storeKey] as Item[]);
-  const dirty = JSON.stringify(rows) !== JSON.stringify(state[storeKey]);
+  // Kategori nonaktif (sudah dihapus tapi masih dipakai klaim lama) tidak ditampilkan.
+  const visible = (state[storeKey] as Item[]).filter((x) => !("active" in x) || storeKey !== "reimbursementCategories" || x.active !== false);
+  const [rows, setRows] = useState<Item[]>(visible);
+  const dirty = JSON.stringify(rows) !== JSON.stringify(visible);
+  const savable = (k: Key): k is SavableKey => k === "holidays" || k === "reimbursementCategories" || k === "teams";
+  const save = () => {
+    if (savable(storeKey)) void ops.saveMaster(storeKey, rows as DataState[typeof storeKey], `${title} saved.`);
+    else run((s) => ({ ...s, [storeKey]: rows }), `${title} saved.`);
+  };
 
   return (
     <SettingsSection
       title={title} description={description} readOnly={readOnly} dirty={dirty}
-      onReset={() => setRows(state[storeKey] as Item[])}
-      onSave={() => run((s) => saveMaster(s, storeKey, rows as DataState[K]), `${title} saved.`)}
+      onReset={() => setRows(visible)}
+      onSave={save}
     >
       <Table>
         <thead><tr>{headers.map((h) => <Th key={h}>{h}</Th>)}<Th /></tr></thead>

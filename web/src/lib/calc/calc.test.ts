@@ -4,7 +4,7 @@ import { formatDate, formatRelative, formatRupiah, terbilang } from "../format";
 import { countWorkingDays, hasSufficientBalance } from "./leave";
 import { dailyOvertime, overtimeBreakdown, overtimePay, overtimePerEntry } from "./overtime";
 import { overlaps, validateEntry, type ValidationContext } from "./timesheet";
-import { endOfMonth, startOfWeek, todayJakarta } from "./dates";
+import { addMonths, endOfMonth, startOfWeek, todayJakarta } from "./dates";
 
 const depnaker: OvertimeSettings = {
   mode: "depnaker",
@@ -161,6 +161,9 @@ describe("format", () => {
     expect(todayJakarta(new Date("2026-10-04T18:00:00Z"))).toBe("2026-10-05");
     expect(endOfMonth("2026-12")).toBe("2026-12-31");
     expect(endOfMonth("2028-02")).toBe("2028-02-29");
+    expect(addMonths("2026-10-16", -6)).toBe("2026-04-16");
+    expect(addMonths("2026-08-31", -6)).toBe("2026-02-28");
+    expect(addMonths("2026-03-15", -6)).toBe("2025-09-15");
   });
 });
 

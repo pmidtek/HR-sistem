@@ -88,7 +88,7 @@ function ReimbursementsContent() {
           <Card padding="md" className="flex flex-col gap-1.5">
             <h3 className="font-display text-sm font-medium">External account{user.external.company ? ` · ${user.external.company}` : ""}</h3>
             <p className="text-sm text-fg-muted">Your PIC <span className="text-fg">{userName(user.external.sponsorId)}</span> confirms each claim before Finance reviews it.</p>
-            <p className="text-xs text-fg-subtle">Access until {formatDate(user.external.accessUntil)}. Receipts older than {state.settings.reimburse.maxReceiptAgeDays} days can&apos;t be claimed.</p>
+            <p className="text-xs text-fg-subtle">Access until {formatDate(user.external.accessUntil)}. Receipts older than {state.settings.reimburse.maxReceiptAgeMonths} months can&apos;t be claimed.</p>
           </Card>
         )}
         <MyPayoutCard />
